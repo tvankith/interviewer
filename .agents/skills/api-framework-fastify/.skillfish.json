@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "api-framework-fastify",
+  "owner": "agents-inc",
+  "repo": "skills",
+  "path": "dist/plugins/api-framework-fastify/skills/api-framework-fastify",
+  "branch": "main",
+  "sha": "6cf9e5555eb7eb13706cf935e0cf17ec1885fe64",
+  "source": "manual"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "interviewer-serverless",
+  "version": "1.0.0",
+  "description": "AWS Lambda functions for interviewer",
+  "workspaces": [
+    "functions/*",
+    "layers/*"
+  ],
+  "scripts": {
+    "build:layer": "node build-layer.js",
+    "clean:layer": "rm -rf layers/chromium/nodejs layers/chromium/node_modules layers/chromium/package-lock.json",
+    "deploy": "npm run build:layer && serverless deploy",
+    "logs": "serverless logs",
+    "invoke": "serverless invoke"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "serverless": "^4.34.0",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-esbuild": "^1.57.1"
+  }
+}

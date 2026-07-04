@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+build
+.env
+.env.*
+*.env
+npm-debug.log
+.turbo
+.DS_Store

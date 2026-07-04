@@ -1,0 +1,88 @@
+service: interviewer-functions
+
+frameworkVersion: "4"
+
+plugins:
+  - serverless-dotenv-plugin
+
+package:
+  individually: true
+  exclude:
+    - node_modules/**
+    - layers/**
+    - .git/**
+    - .github/**
+    - "*.md"
+    - ".env*"
+
+provider:
+  name: aws
+  region: ${opt:region, 'us-east-1'}
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+    TEMP_PDF_BUCKET: ${env:TEMP_PDF_BUCKET}
+    RESUME_TEMPLATE_THUMBNAIL_BUCKET: ${env:RESUME_TEMPLATE_THUMBNAIL_BUCKET}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource: arn:aws:s3:::${env:TEMP_PDF_BUCKET}/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource: arn:aws:s3:::${env:RESUME_TEMPLATE_THUMBNAIL_BUCKET}/*
+
+layers:
+  chromium:
+    path: layers/chromium
+    name: ${self:service}-${self:provider.stage}-chromium
+    description: Chromium and dependencies layer
+    compatibleRuntimes:
+      - nodejs20.x
+
+functions:
+  htmlScreenshot:
+    handler: functions/html-screenshot/handler.capture
+    timeout: 60
+    memorySize: 3008
+    layers:
+      - { Ref: ChromiumLambdaLayer }
+    environment:
+      FUNCTION_NAME: screenshot
+    description: Generate PNG screenshots from HTML
+    events:
+      - httpApi:
+          path: /screenshot
+          method: post
+
+  htmlPdf:
+    handler: functions/html-pdf/handler.generatePdf
+    timeout: 60
+    memorySize: 3008
+    layers:
+      - { Ref: ChromiumLambdaLayer }
+    environment:
+      FUNCTION_NAME: pdf
+    description: Generate PDF documents from HTML
+    events:
+      - httpApi:
+          path: /pdf
+          method: post
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    external:
+      - "@sparticuz/chromium"
+      - "puppeteer-core"
+    packages: external
+    exclude:
+      - node_modules

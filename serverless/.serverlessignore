@@ -1,0 +1,15 @@
+node_modules/
+.git/
+.github/
+doc/
+app/
+server/
+.env
+.env.*
+*.log
+.DS_Store
+.claude/
+layers/
+build/
+dist/
+.serverless/

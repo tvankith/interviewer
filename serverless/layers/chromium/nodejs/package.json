@@ -1,0 +1,10 @@
+{
+  "name": "chromium-layer",
+  "version": "1.0.0",
+  "description": "Chromium and puppeteer dependencies layer",
+  "type": "commonjs",
+  "dependencies": {
+    "@sparticuz/chromium": "^147.0.2",
+    "puppeteer-core": "^24.42.0"
+  }
+}

@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model user {
+  id         String    @id
+  email      String?   @unique
+  created_at DateTime  @default(now())
+}
+
+model candidate_profile {
+  id                   String                @id @default(cuid())
+  user_id              String
+  title                String?
+  name                 String?
+  email                String?
+  phone                String?
+  location             String?
+  summary              String?
+  website              String?
+  skills               Json?
+  projects             Json?
+  experiences          Json?
+  educations           Json?
+  links                Json?
+  profile_specs        profile_spec[]
+  conversation_threads conversation_thread[]
+  created_at           DateTime              @default(now())
+  deleted_at           DateTime?
+
+  @@index([user_id])
+}
+
+model profile_spec {
+  id                    String    @id @default(cuid())
+  candidate_profile_id  String
+  candidate_profile     candidate_profile @relation(fields: [candidate_profile_id], references: [id])
+  name                  String
+  content               String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime?
+  deleted_at            DateTime?
+
+  @@unique([candidate_profile_id, name])
+  @@index([candidate_profile_id])
+}
+
+model conversation_thread {
+  id                     String            @id @default(cuid())
+  thread_id              String            @unique
+  candidate_profile_id   String
+  candidate_profile      candidate_profile @relation(fields: [candidate_profile_id], references: [id])
+  created_at             DateTime          @default(now())
+
+  @@index([candidate_profile_id])
+}
+
+model resume_template {
+  id            String    @id @default(cuid())
+  name          String
+  version       String    @default("1.0.0")
+  content       Json
+  thumbnail_url String?
+  is_public     Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  deleted_at    DateTime?
+}

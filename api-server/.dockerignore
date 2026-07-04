@@ -1,0 +1,53 @@
+# Build artifacts (removed on each build)
+node_modules
+dist
+.next
+.cache
+coverage
+
+# Environment and secrets
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor configs
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+.eslintrc.json
+
+# Logs and debugging
+npm-debug.log
+npm-debug.log.*
+yarn-debug.log.*
+*.log
+
+# Documentation and config
+README.md
+CHANGELOG.md
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Testing
+tests
+test
+*.test.js
+jest.config.js
+.gitkeep
+
+# Non-npm lockfiles (package-lock.json is kept — npm ci requires it)
+yarn.lock
+pnpm-lock.yaml
+
+# Temporary files
+*.tmp
+.turbo

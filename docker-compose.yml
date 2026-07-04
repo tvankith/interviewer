@@ -1,0 +1,122 @@
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine3.21
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_MULTIPLE_DATABASES: api_server_database,agent_server_database
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: "no"
+
+  # ── adminer (database viewer) ─────────────────────────────────────────────────
+  adminer:
+    image: adminer:5
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DEFAULT_DRIVER: pgsql
+    volumes:
+      - ./docker/adminer/login-servers.php:/var/www/html/plugins-enabled/login-servers.php:ro
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # ── api-server ──────────────────────────────────────────────────────────────
+  api-server:
+    build:
+      context: ./api-server
+      target: dev
+    environment:
+      PORT: "3002"
+      HOST: "0.0.0.0"
+      NODE_ENV: development
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: ${API_SERVER_DATABASE_URL}
+      DIRECT_URL: ${API_SERVER_DATABASE_DIRECT_URL}
+      FRONTEND_ORIGIN: http://localhost:3000
+      AI_SERVER_URL: http://ai-server:3004
+      JWT_SECRET: ${JWT_SECRET}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+    volumes:
+      - ./api-server:/app # full source (tsconfig, prisma, src, etc.)
+      - api_server_node_modules:/app/node_modules # container-built modules overlay host
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # ── ai-server (FastAPI + LangGraph) ────────────────────────────────────────
+  ai-server:
+    build:
+      context: ./ai-server
+      target: dev
+    environment:
+      PORT: "3004"
+      AGENT_SERVER_DATABASE_URL: ${AGENT_SERVER_DATABASE_URL}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      FRONTEND_ORIGIN: http://localhost:3000
+      MCP_URL: http://api-server:3002/mcp
+      API_SERVER_URL: http://api-server:3002
+      LOG_LEVEL: ${LOG_LEVEL}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+    volumes:
+      - ./ai-server:/app
+      - ai_server_venv:/app/.venv # container-built venv overlay host
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api-server:
+        condition: service_started
+    restart: "no"
+
+  # ── app (Next.js) ───────────────────────────────────────────────────────────
+  app:
+    build:
+      context: ./app
+      target: dev
+    environment:
+      API_SERVER_URL: ${API_SERVER_URL}
+      NEXT_PUBLIC_API_SERVER_URL: http://localhost:3002
+      NEXT_PUBLIC_AI_SERVER_URL: http://localhost:3004
+      NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    volumes:
+      - ./app:/app # full source (tsconfig.json, next.config.ts, src, etc.)
+      - app_node_modules:/app/node_modules # container-built modules overlay host
+      - app_next:/app/.next # container .next cache overlay host
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-server
+    restart: "no"
+
+volumes:
+  postgres_data:
+  api_server_node_modules:
+  agent_server_node_modules:
+  app_node_modules:
+  app_next:
+  ai_server_venv:
