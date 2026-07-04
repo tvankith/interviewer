@@ -99,6 +99,7 @@ services:
       target: dev
     environment:
       API_SERVER_URL: ${API_SERVER_URL}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
       NEXT_PUBLIC_API_SERVER_URL: http://localhost:3002
       NEXT_PUBLIC_AI_SERVER_URL: http://localhost:3004
       NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}

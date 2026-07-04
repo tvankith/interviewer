@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_URL =
   process.env.API_SERVER_URL
 
+// Shares the auth cookie across subdomains, e.g. ".chumma.space"
+const COOKIE_DOMAIN =
+  process.env.COOKIE_DOMAIN || undefined;
+
 function decodeToken(token: string): {
   exp?: number;
 } | null {
@@ -337,6 +341,7 @@ async function handler(
             "production",
           sameSite: "lax",
           path: "/",
+          domain: COOKIE_DOMAIN,
           expires: accessExpires,
         }
       );
@@ -366,6 +371,7 @@ async function handler(
               "production",
             sameSite: "lax",
             path: "/",
+            domain: COOKIE_DOMAIN,
             expires: refreshExpires,
           }
         );
@@ -397,6 +403,7 @@ async function handler(
               "production",
             sameSite: "lax",
             path: "/",
+            domain: COOKIE_DOMAIN,
             expires:
               refreshTokensCookie.access_token
                 .expires,
@@ -415,6 +422,7 @@ async function handler(
               "production",
             sameSite: "lax",
             path: "/",
+            domain: COOKIE_DOMAIN,
             expires:
               refreshTokensCookie.refresh_token
                 .expires,
