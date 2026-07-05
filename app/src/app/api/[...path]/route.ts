@@ -170,9 +170,9 @@ async function handler(
 
     if (!accessToken && refreshToken) {
       const refreshed =
-        await refreshAccessToken(
-          refreshToken
-        );
+      await refreshAccessToken(
+        refreshToken
+      );
 
       if (!refreshed) {
         const redirectResponse =

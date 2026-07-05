@@ -23,6 +23,9 @@ export function createSupabaseBrowserClient() {
       flowType: "pkce",
       detectSessionInUrl: false,
       persistSession: true,
+      // Set autoRefreshToken to false to prevent browser from refreshing token
+      // Let's server handle it
+      // autoRefreshToken: false,
     },
   });
 }
