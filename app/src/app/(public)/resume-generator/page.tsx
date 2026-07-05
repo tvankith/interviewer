@@ -1,12 +1,18 @@
-import getDefaultResumeTemplate from "@/helpers/getDefaultResumeTemplate";
+import getResumeTemplate from "@/helpers/getResumeTemplate";
+import getResumeTheme from "@/helpers/getResumeTheme";
+import classicTemplate from "@/resume-engine/templates/classic.template.json";
+import classicTheme from "@/resume-engine/templates/classic.theme.json";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
 import ResumeForm from "./resume-form";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
 
-  const [template] = await Promise.all([
-    Promise.resolve(getDefaultResumeTemplate()),
+  const [templateDoc, themeDoc] = await Promise.all([
+    getResumeTemplate(),
+    getResumeTheme(),
   ]);
 
   return (
@@ -22,11 +28,12 @@ export default async function Page() {
         location: '',
         name: '',
         phone: '',
-        summary: '',
+        summary: undefined,
         template_id: '',
         website: ''
       }}
-      template={template}
+      templateDoc={templateDoc ?? (classicTemplate as unknown as TemplateDocument)}
+      themeDoc={themeDoc ?? (classicTheme as unknown as ThemeDocument)}
     />
   );
 }

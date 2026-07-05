@@ -18,13 +18,14 @@ import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import RichTextEditor from "./rich-text-editor";
 import ChipInput from "./chip-input";
+import type { RichTextValue } from "@/resume-engine/types/lexical";
 
 export type Experience = {
     company?: string;
     role?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -38,7 +39,7 @@ type ItemProps = {
     exp: Experience;
     index: number;
     onRemove: (index: number) => void;
-    onChange: (index: number, key: keyof Omit<Experience, "tech_stack">, val: string) => void;
+    onChange: (index: number, key: keyof Omit<Experience, "tech_stack">, val: string | RichTextValue) => void;
     onTechStackChange: (index: number, val: string[]) => void;
 };
 
@@ -89,8 +90,9 @@ function SortableExperience({ id, exp, index, onRemove, onChange, onTechStackCha
                     />
 
                     <RichTextEditor
-                        value={exp.description || ""}
-                        onChange={(html) => onChange(index, "description", html)}
+                        format="lexical"
+                        value={exp.description}
+                        onChange={(state) => onChange(index, "description", state)}
                         placeholder={["Tell me about your experience", exp.company && ` in ${exp.company}`].join(" ")}
                     />
 
@@ -128,7 +130,7 @@ export default function ExperienceBuilder({ value = [], onChange }: Props) {
         onChange(updated);
     };
 
-    const handleChange = (index: number, key: keyof Omit<Experience, "tech_stack">, val: string) => {
+    const handleChange = (index: number, key: keyof Omit<Experience, "tech_stack">, val: string | RichTextValue) => {
         const updated = [...value];
         updated[index] = { ...updated[index], [key]: val };
         onChange(updated);

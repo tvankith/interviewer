@@ -1,9 +1,14 @@
 import { Suspense } from "react";
 import { getProfileById } from "@/apis/profile";
 import { generatePdfFromHtml } from "@/app/(dashboard)/profiles/actions";
-import Handlebars from "handlebars";
-import { mapProfileToResume } from "@/app/(dashboard)/profiles/helpers/map-profile-to-resume";
-import getDefaultResumeTemplate from "@/helpers/getDefaultResumeTemplate";
+import { renderResumeToHtmlDocument } from "@/resume-engine/render/render-static-html";
+import getResumeTemplate from "@/helpers/getResumeTemplate";
+import getResumeTheme from "@/helpers/getResumeTheme";
+import classicTemplate from "@/resume-engine/templates/classic.template.json";
+import classicTheme from "@/resume-engine/templates/classic.theme.json";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
+import type { ResumeData } from "@/resume-engine/types/resume-data";
 
 type Props = {
   params: { id: string } | Promise<{ id: string }>;
@@ -20,14 +25,17 @@ export function PdfPreviewContent({ params }: Props) {
 async function PdfContent({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const resolved = params instanceof Promise ? await params : params;
   const { id } = resolved;
-  const [profile, template] = await Promise.all([
-    getProfileById(id),
-    Promise.resolve(getDefaultResumeTemplate()),
+  const profile = await getProfileById(id);
+  const [templateDoc, themeDoc] = await Promise.all([
+    getResumeTemplate(profile.template_id),
+    getResumeTheme(profile.theme_id),
   ]);
 
-  const compiled = Handlebars.compile(template);
-  const data = mapProfileToResume(profile);
-  const html = compiled(data);
+  const html = renderResumeToHtmlDocument({
+    templateDoc: templateDoc ?? (classicTemplate as unknown as TemplateDocument),
+    themeDoc: themeDoc ?? (classicTheme as unknown as ThemeDocument),
+    data: profile as ResumeData,
+  });
 
   const response = await generatePdfFromHtml(html);
 

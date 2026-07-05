@@ -21,6 +21,8 @@ export function transformProfile(profile: CandidateProfile) {
     experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
     educations: Array.isArray(profile.educations) ? profile.educations : [],
     links: Array.isArray(profile.links) ? profile.links : [],
+    template_id: profile.template_id,
+    theme_id: profile.theme_id,
     created_at: profile.created_at.toISOString(),
     deleted_at: profile.deleted_at ? profile.deleted_at.toISOString() : null,
   };

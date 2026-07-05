@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "id": "tpl-classic-v1",
+  "name": "Classic",
+  "root": {
+    "id": "page",
+    "type": "Page",
+    "children": [
+      {
+        "id": "header",
+        "type": "Column",
+        "className": "items-center text-center",
+        "props": { "gap": "xs" },
+        "children": [
+          {
+            "id": "name",
+            "type": "Text",
+            "binding": "name",
+            "editable": { "editable": true },
+            "className": "uppercase tracking-widest",
+            "props": { "as": "h1", "variant": "h1" }
+          },
+          {
+            "id": "contact-row",
+            "type": "Row",
+            "className": "flex-wrap",
+            "props": { "gap": "sm", "justify": "center" },
+            "children": [
+              { "id": "email", "type": "Text", "binding": "email", "editable": { "editable": true }, "props": { "variant": "small" } },
+              { "id": "phone", "type": "Text", "binding": "phone", "editable": { "editable": true }, "props": { "variant": "small" } },
+              { "id": "location", "type": "Text", "binding": "location", "editable": { "editable": true }, "props": { "variant": "small" } },
+              { "id": "website", "type": "Text", "binding": "website", "editable": { "editable": true }, "props": { "variant": "small", "href": true } },
+              {
+                "id": "links",
+                "type": "List",
+                "binding": "links",
+                "props": {
+                  "itemTemplate": {
+                    "id": "link-item",
+                    "type": "Text",
+                    "binding": "social_media",
+                    "props": { "variant": "small", "href": true, "hrefBinding": "url" }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      { "id": "header-divider", "type": "Divider" },
+      {
+        "id": "summary-section",
+        "type": "Section",
+        "props": { "title": "Summary" },
+        "children": [
+          { "id": "summary-text", "type": "RichText", "binding": "summary", "editable": { "editable": true } }
+        ]
+      },
+      {
+        "id": "experience-section",
+        "type": "Section",
+        "props": { "title": "Experience" },
+        "children": [
+          {
+            "id": "experience-list",
+            "type": "List",
+            "binding": "experiences",
+            "props": {
+              "gap": "sm",
+              "itemTemplate": {
+                "id": "experience-item",
+                "type": "Stack",
+                "props": { "gap": "xs" },
+                "children": [
+                  {
+                    "id": "exp-header",
+                    "type": "Row",
+                    "props": { "justify": "space-between", "align": "baseline" },
+                    "children": [
+                      {
+                        "id": "exp-title",
+                        "type": "Text",
+                        "binding": "role",
+                        "editable": { "editable": true },
+                        "props": { "variant": "label", "bindingEnd": "company", "separator": " — " }
+                      },
+                      {
+                        "id": "exp-date",
+                        "type": "Text",
+                        "binding": "start_date",
+                        "editable": { "editable": true },
+                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – " }
+                      }
+                    ]
+                  },
+                  { "id": "exp-description", "type": "RichText", "binding": "description", "editable": { "editable": true } },
+                  { "id": "exp-tech", "type": "List", "binding": "tech_stack", "editable": { "editable": true }, "props": { "display": "chip" } }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "education-section",
+        "type": "Section",
+        "props": { "title": "Education" },
+        "children": [
+          {
+            "id": "education-list",
+            "type": "List",
+            "binding": "educations",
+            "props": {
+              "gap": "sm",
+              "itemTemplate": {
+                "id": "education-item",
+                "type": "Stack",
+                "props": { "gap": "xs" },
+                "children": [
+                  {
+                    "id": "edu-header",
+                    "type": "Row",
+                    "props": { "justify": "space-between", "align": "baseline" },
+                    "children": [
+                      { "id": "edu-title", "type": "Text", "binding": "institute", "editable": { "editable": true }, "props": { "variant": "label" } },
+                      {
+                        "id": "edu-date",
+                        "type": "Text",
+                        "binding": "start_date",
+                        "editable": { "editable": true },
+                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – " }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "edu-course",
+                    "type": "Text",
+                    "binding": "course",
+                    "editable": { "editable": true },
+                    "className": "italic",
+                    "props": { "variant": "small", "muted": true }
+                  },
+                  { "id": "edu-description", "type": "RichText", "binding": "description", "editable": { "editable": true } }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "skills-section",
+        "type": "Section",
+        "props": { "title": "Skills" },
+        "children": [
+          { "id": "skills-list", "type": "List", "binding": "skills", "editable": { "editable": true }, "props": { "display": "chip" } }
+        ]
+      },
+      {
+        "id": "projects-section",
+        "type": "Section",
+        "props": { "title": "Projects" },
+        "children": [
+          {
+            "id": "projects-list",
+            "type": "List",
+            "binding": "projects",
+            "props": {
+              "gap": "sm",
+              "itemTemplate": {
+                "id": "project-item",
+                "type": "Stack",
+                "props": { "gap": "xs" },
+                "children": [
+                  { "id": "project-name", "type": "Text", "binding": "name", "editable": { "editable": true }, "props": { "variant": "label" } },
+                  { "id": "project-description", "type": "RichText", "binding": "description", "editable": { "editable": true } },
+                  { "id": "project-tech", "type": "List", "binding": "tech_stack", "editable": { "editable": true }, "props": { "display": "chip" } }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

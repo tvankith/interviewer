@@ -21,7 +21,7 @@ export const mapFormToProfilePayload = (data: CandidateFormValues) => ({
     email: data?.email || "",
     phone: data?.phone,
     location: data?.location || "",
-    summary: data?.summary || "",
+    summary: data?.summary,
     website: data?.website || "",
     skills: data?.skills || [],
 });

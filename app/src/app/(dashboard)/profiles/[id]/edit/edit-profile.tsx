@@ -8,17 +8,21 @@ import { updateProfile } from "@/apis/profile";
 import ProfileEditor from "../../components/profile-editor";
 import { useRouter } from "next/navigation";
 import type { CandidateFormValues } from "../../profile/compose/types";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
 
 type Props = {
     id: string;
     initialData: CandidateFormValues;
-    template: string;
+    templateDoc: TemplateDocument;
+    themeDoc: ThemeDocument;
 };
 
 export default function EditProfile({
     id,
     initialData,
-    template,
+    templateDoc,
+    themeDoc,
 }: Props) {
     const router = useRouter()
     const methods = useForm<CandidateFormValues>({ defaultValues: initialData });
@@ -32,8 +36,10 @@ export default function EditProfile({
         mutationFn: (payload: any) => updateProfile(id, payload, { signal: abortControllerRef.current?.signal }),
 
         onSuccess: (_, variables) => {
-            // keep preview synced after successful save
-            lastSavedDataRef.current = variables;
+            // Merge in only the fields that were actually sent — variables is the
+            // partial diff payload, not the full form, so replacing the ref outright
+            // would make every untouched field look "changed" on the next autosave tick.
+            lastSavedDataRef.current = { ...lastSavedDataRef.current, ...variables };
         },
     });
 
@@ -46,7 +52,7 @@ export default function EditProfile({
                 const payload: any = {};
 
                 // Only include fields that actually changed
-                const fieldsToCheck = ['name', 'email', 'phone', 'location', 'summary', 'website', 'skills', 'projects', 'experiences', 'educations', 'links'];
+                const fieldsToCheck = ['name', 'email', 'phone', 'location', 'summary', 'website', 'skills', 'projects', 'experiences', 'educations', 'links', 'template_id', 'theme_id'];
 
                 fieldsToCheck.forEach((field) => {
                     const newValue = field === 'projects'
@@ -92,7 +98,8 @@ export default function EditProfile({
                 <ProfileEditor
                     isDataLoading={false}
                     isDataSaving={updateMutation.isPending}
-                    template={template}
+                    templateDoc={templateDoc}
+                    themeDoc={themeDoc}
                     profileId={id}
                     onPreviewClick={()=>{
                         router.push(

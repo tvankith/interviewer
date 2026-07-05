@@ -7,18 +7,22 @@ import { debounce } from "lodash";
 import ProfileEditor from "@/app/(dashboard)/profiles/components/profile-editor";
 import { CandidateFormValues } from "@/app/(dashboard)/profiles/profile/compose/types";
 import { saveToDB, getFromDB } from "@/lib/indexdb";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
 
 const STORAGE_KEY = "profileDraft";
 
 type Props = {
     id?: string;
     initialData: CandidateFormValues;
-    template: string;
+    templateDoc: TemplateDocument;
+    themeDoc: ThemeDocument;
 };
 
 export default function ResumeForm({
     initialData,
-    template,
+    templateDoc,
+    themeDoc,
 }: Props) {
     const router = useRouter();
     const [loadedData, setLoadedData] = useState<CandidateFormValues | null>(null);
@@ -101,7 +105,8 @@ export default function ResumeForm({
                 isDataLoading={false}
                 isDataSaving={isSaving}
                 onPreviewClick={handlePreviewClick}
-                template={template}
+                templateDoc={templateDoc}
+                themeDoc={themeDoc}
             />
         </FormProvider>
     );

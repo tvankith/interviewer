@@ -29,18 +29,30 @@ import {
   EditorState,
   $insertNodes,
 } from "lexical";
+import type { SerializedEditorState } from "lexical";
 
 import {
   $generateHtmlFromNodes,
   $generateNodesFromDOM,
 } from "@lexical/html";
 
-type Props = {
+type HtmlModeProps = {
+  format?: "html";
   value?: string;
   onChange?: (html: string) => void;
   placeholder?: string;
   className?: string;
 };
+
+type LexicalModeProps = {
+  format: "lexical";
+  value?: SerializedEditorState | null;
+  onChange?: (state: SerializedEditorState) => void;
+  placeholder?: string;
+  className?: string;
+};
+
+type Props = HtmlModeProps | LexicalModeProps;
 
 const TOOLBAR_BTN =
   "px-2 py-1 text-xs rounded hover:bg-accent hover:text-accent-foreground transition-colors";
@@ -116,16 +128,29 @@ function Toolbar() {
   );
 }
 
-function LoadInitialValue({ value }: { value?: string }) {
+function LoadInitialValue({
+  format,
+  value,
+}: {
+  format: "html" | "lexical";
+  value?: string | SerializedEditorState | null;
+}) {
   const [editor] = useLexicalComposerContext();
   const loaded = useRef(false);
+
   useEffect(() => {
     if (!value || loaded.current) return;
     loaded.current = true;
-  
+
+    if (format === "lexical") {
+      const state = editor.parseEditorState(value as SerializedEditorState);
+      editor.setEditorState(state);
+      return;
+    }
+
     editor.update(() => {
       const parser = new DOMParser();
-      const dom = parser.parseFromString(value, "text/html");
+      const dom = parser.parseFromString(value as string, "text/html");
 
       const nodes = $generateNodesFromDOM(editor, dom);
       const root = $getRoot();
@@ -139,17 +164,15 @@ function LoadInitialValue({ value }: { value?: string }) {
         root.append($createParagraphNode());
       }
     });
-  }, [value, editor]);
+  }, [format, value, editor]);
 
   return null;
 }
 
-export default function RichTextEditor({
-  value,
-  onChange,
-  placeholder,
-  className,
-}: Props) {
+export default function RichTextEditor(props: Props) {
+  const { placeholder, className, value } = props;
+  const format = props.format ?? "html";
+
   const initialConfig = {
     namespace: "ResumeEditor",
     theme: {},
@@ -202,14 +225,18 @@ export default function RichTextEditor({
 
           <OnChangePlugin
             onChange={(editorState: EditorState, editor) => {
+              if (format === "lexical") {
+                (props as LexicalModeProps).onChange?.(editorState.toJSON());
+                return;
+              }
               editorState.read(() => {
                 const html = $generateHtmlFromNodes(editor, null);
-                onChange?.(html);
+                (props as HtmlModeProps).onChange?.(html);
               });
             }}
           />
 
-          <LoadInitialValue value={value} />
+          <LoadInitialValue format={format} value={value} />
         </div>
       </LexicalComposer>
     </div>

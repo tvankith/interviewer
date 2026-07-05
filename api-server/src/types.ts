@@ -1,9 +1,10 @@
-import type { candidate_profile as PrismaCandidateProfile, profile_spec as PrismaProfileSpec, resume_template as PrismaResumeTemplate, conversation_thread as PrismaConversationThread } from '@prisma/client'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import type { candidate_profile as PrismaCandidateProfile, profile_spec as PrismaProfileSpec, resume_template as PrismaResumeTemplate, resume_theme as PrismaResumeTheme, conversation_thread as PrismaConversationThread } from '@prisma/client'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // Use Prisma-generated types directly
 export type CandidateProfile = PrismaCandidateProfile;
 export type ProfileSpec = PrismaProfileSpec;
 export type ResumeTemplate = PrismaResumeTemplate;
+export type ResumeTheme = PrismaResumeTheme;
 export type ConversationThread = PrismaConversationThread;
 
 // For backwards compatibility
@@ -15,13 +16,15 @@ export interface CreateProfileInput {
   email?: string | null;
   phone?: string | null;
   location?: string | null;
-  summary?: string | null;
+  summary?: Record<string, unknown> | null;
   website?: string | null;
   skills?: any;
   projects?: any;
   experiences?: any;
   educations?: any;
   links?: any;
+  template_id?: string | null;
+  theme_id?: string | null;
 }
 
 export interface UpdateProfileInput {
@@ -30,13 +33,15 @@ export interface UpdateProfileInput {
   email?: string | null;
   phone?: string | null;
   location?: string | null;
-  summary?: string | null;
+  summary?: Record<string, unknown> | null;
   website?: string | null;
   skills?: any;
   projects?: any;
   experiences?: any;
   educations?: any;
   links?: any;
+  template_id?: string | null;
+  theme_id?: string | null;
 }
 
 export interface CreateProfileSpecInput {
@@ -67,13 +72,15 @@ export interface ProfileResponse {
   email: string | null;
   phone: string | null;
   location: string | null;
-  summary: string | null;
+  summary: Record<string, unknown> | null;
   website: string | null;
   skills: any;
   projects: any;
   experiences: any;
   educations: any;
   links: any;
+  template_id: string | null;
+  theme_id: string | null;
   created_at: Date;
   deleted_at: Date | null;
 }
@@ -92,6 +99,20 @@ export interface UpdateResumeTemplateInput {
   content?: Record<string, unknown>;
   is_public?: boolean;
   thumbnail_url?: string | null;
+}
+
+export interface CreateResumeThemeInput {
+  name: string;
+  version?: string;
+  content: Record<string, unknown>;
+  is_public?: boolean;
+}
+
+export interface UpdateResumeThemeInput {
+  name?: string;
+  version?: string;
+  content?: Record<string, unknown>;
+  is_public?: boolean;
 }
 
 export interface ListOptions {

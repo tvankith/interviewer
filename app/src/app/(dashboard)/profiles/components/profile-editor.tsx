@@ -19,12 +19,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FormEditPanel from "./form-edit-panel";
 import type { SectionId } from "./profile-sections";
+import { plainTextToLexicalJson } from "@/resume-engine/lexical-json/plain-text-to-lexical-json";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 type Props = {
-    template: string;
+    templateDoc: TemplateDocument;
+    themeDoc: ThemeDocument;
     onSubmit?: (payload: CandidatePayload) => void;
     isDataLoading?: boolean;
     isDataSaving?: boolean;
@@ -37,7 +41,8 @@ type Props = {
 // Main export
 // ---------------------------------------------------------------------------
 export default function ProfileEditor({
-    template,
+    templateDoc,
+    themeDoc,
     isDataLoading,
     onPreviewClick,
     profileId
@@ -70,18 +75,40 @@ export default function ProfileEditor({
         return value;
     };
 
-    // Resume parsing
+    // Resume parsing — the parser returns plain-text fields (LLM-extracted,
+    // same convention as the interview agent's proposals), so descriptions
+    // are converted to Lexical JSON the same way buildProposalDiff does.
     const fillForm = (data: any) => {
         if (data.name) setValue("name", data.name);
         if (data.email) setValue("email", data.email);
         if (data.phone) setValue("phone", data.phone);
         if (data.location) setValue("location", data.location);
-        if (data.summary) setValue("summary", data.summary);
+        if (data.summary) setValue("summary", plainTextToLexicalJson(data.summary));
         if (data.website) setValue("website", data.website);
         setValue("skills", data.skills || []);
-        setValue("projects", (data.projects || []).map((p: any) => ({ ...p, tech_stack: p.tech_stack || [] })));
-        setValue("experiences", (data.experiences || []).map((e: any) => ({ ...e, tech_stack: e.tech_stack || [] })));
-        setValue("educations", data.educations || []);
+        setValue(
+            "projects",
+            (data.projects || []).map((p: any) => ({
+                ...p,
+                tech_stack: p.tech_stack || [],
+                description: plainTextToLexicalJson(p.description),
+            }))
+        );
+        setValue(
+            "experiences",
+            (data.experiences || []).map((e: any) => ({
+                ...e,
+                tech_stack: e.tech_stack || [],
+                description: plainTextToLexicalJson(e.description),
+            }))
+        );
+        setValue(
+            "educations",
+            (data.educations || []).map((edu: any) => ({
+                ...edu,
+                description: plainTextToLexicalJson(edu.description),
+            }))
+        );
         setValue("links", data.links || []);
     };
 
@@ -302,6 +329,8 @@ export default function ProfileEditor({
     const links = watch("links");
     const summary = watch("summary");
     const skills = watch("skills");
+    const templateId = watch("template_id");
+    const themeId = watch("theme_id");
     const values = watch();
 
 
@@ -339,6 +368,8 @@ export default function ProfileEditor({
                 links,
                 summary,
                 skills,
+                templateId,
+                themeId,
                 isParsing: parseResumeMutation.isPending,
                 isLoading: isDataLoading || false,
             }}
@@ -350,12 +381,14 @@ export default function ProfileEditor({
                 </div>
                 {mode === "form" && (
                     <div className="col-span-2 min-h-0 p-2 max-h-full flex">
-                        <FormEditPanel 
-                            activeSection={activeSection} 
-                            onSelectSection={showSection} 
+                        <FormEditPanel
+                            activeSection={activeSection}
+                            onSelectSection={showSection}
                             values={values}
-                            template={template}
+                            templateDoc={templateDoc}
+                            themeDoc={themeDoc}
                             onPreviewClick={onPreviewClick}
+                            setValue={setValue}
                             />
                     </div>
                 )}

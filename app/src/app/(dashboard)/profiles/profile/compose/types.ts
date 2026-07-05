@@ -1,7 +1,8 @@
+import type { RichTextValue } from "@/resume-engine/types/lexical";
 
 type Project = {
     name?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -10,7 +11,7 @@ type Experience = {
     role?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -19,7 +20,7 @@ export type Education = {
     course?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
 };
 
 export type SocialLink = {
@@ -38,17 +39,18 @@ export type CandidateFormValues = {
     email?: string;
     phone?: string;
     location?: string;
-    summary?: string;
+    summary?: RichTextValue;
     skills?: string[];
     website?: string;
     template_id?: string;
+    theme_id?: string;
     target_role?: string;
 };
 
 export type CandidatePayload = {
     projects?: {
         name?: string;
-        description?: string;
+        description?: RichTextValue;
         tech_stack: string[];
     }[];
     experiences?: {
@@ -56,7 +58,7 @@ export type CandidatePayload = {
         role?: string;
         start_date?: string;
         end_date?: string;
-        description?: string;
+        description?: RichTextValue;
         tech_stack: string[];
     }[];
     educations?: Education[];
@@ -65,7 +67,7 @@ export type CandidatePayload = {
     email?: string;
     phone?: string;
     location?: string;
-    summary?: string;
+    summary?: RichTextValue;
     skills?: string[];
     website?: string;
     target_role?: string;

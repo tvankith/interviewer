@@ -5,8 +5,12 @@ import TabsNav from "@/components/basic/tabs-nav";
 import { FORM_SECTIONS, DESIGN_SECTIONS, FLAT_SECTIONS, type SectionId } from "./profile-sections";
 import SectionFormContent from "./section-form-content";
 import { useState } from "react";
-import ResumePreview from "./resume-preview";
+import ResumeCanvas from "@/resume-engine/render/resume-canvas";
+import type { ResumeData } from "@/resume-engine/types/resume-data";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
 import { CandidateFormValues } from "../profile/compose/types";
+import type { UseFormSetValue } from "react-hook-form";
 import { Menu, Pen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,11 +18,13 @@ type Props = {
     activeSection: SectionId;
     onSelectSection: (id: string) => void;
     values: CandidateFormValues;
-    template: string;
+    templateDoc: TemplateDocument;
+    themeDoc: ThemeDocument;
+    setValue: UseFormSetValue<CandidateFormValues>;
     onPreviewClick?: () => void;
 };
 
-export default function FormEditPanel({ activeSection, onSelectSection, values, template, onPreviewClick }: Props) {
+export default function FormEditPanel({ activeSection, onSelectSection, values, templateDoc, themeDoc, setValue, onPreviewClick }: Props) {
     const [tab, setTab] = useState("preview")
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -91,11 +97,15 @@ export default function FormEditPanel({ activeSection, onSelectSection, values, 
                         </div>
                     </Card>}
                 {tab === "preview" && (
-                    <ResumePreview
-                        profile={values}
-                        template={template}
-                        iframeClassName="w-full"
-                    />
+                    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
+                        <ResumeCanvas
+                            data={values as ResumeData}
+                            templateDoc={templateDoc}
+                            themeDoc={themeDoc}
+                            mode="interactive"
+                            onEdit={(binding, value) => setValue(binding as never, value as never, { shouldDirty: true })}
+                        />
+                    </div>
                 )}
             </div>
         </div>

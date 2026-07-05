@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { UseFormRegister, UseFormSetValue } from "react-hook-form";
-import type { CandidateFormValues, CandidatePayload } from "../profile/compose/types";
+import type { CandidateFormValues } from "../profile/compose/types";
 
 export type ProfileEditorContextValue = {
     register: UseFormRegister<CandidateFormValues>;
@@ -11,8 +11,10 @@ export type ProfileEditorContextValue = {
     experiences: CandidateFormValues["experiences"];
     educations: CandidateFormValues["educations"];
     links: CandidateFormValues["links"];
-    summary: string | undefined;
+    summary: CandidateFormValues["summary"];
     skills?: string[];
+    templateId?: string;
+    themeId?: string;
     isParsing: boolean;
     isLoading: boolean;
 };

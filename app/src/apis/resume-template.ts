@@ -1,10 +1,11 @@
 import { axiosInstance } from "./axios-instances";
+import type { TemplateDocument } from "@/resume-engine/types/template";
 
 export interface Template {
   id: string;
   name: string;
   version: string;
-  content: { html: string };
+  content: TemplateDocument;
   thumbnail_url: string | null;
   is_public: boolean;
   created_at: string;

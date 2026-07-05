@@ -3,9 +3,12 @@
 import { Suspense, useState, useEffect, useRef } from "react";
 import { generatePdfFromHtml } from "@/app/(dashboard)/profiles/actions";
 import CloseButton from "@/app/(dashboard)/profiles/components/close-button";
-import Handlebars from "handlebars";
-import { mapProfileToResume } from "@/app/(dashboard)/profiles/helpers/map-profile-to-resume";
-import getDefaultResumeTemplate from "@/helpers/getDefaultResumeTemplate";
+import { renderResumeToHtmlDocument } from "@/resume-engine/render/render-static-html";
+import classicTemplate from "@/resume-engine/templates/classic.template.json";
+import classicTheme from "@/resume-engine/templates/classic.theme.json";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
+import type { ResumeData } from "@/resume-engine/types/resume-data";
 import { getFromDB } from "@/lib/indexdb";
 
 type Props = {
@@ -44,16 +47,17 @@ function PdfContent() {
 
     const generatePdf = async () => {
       try {
-        const template = await getDefaultResumeTemplate();
         const profileData = await getFromDB("profileDraft");
         if (!profileData) {
           setError({ message: "No resume data found. Please save your resume first." });
           return;
         }
 
-        const compiled = Handlebars.compile(template);
-        const data = mapProfileToResume(profileData);
-        const html = compiled(data);
+        const html = renderResumeToHtmlDocument({
+          templateDoc: classicTemplate as unknown as TemplateDocument,
+          themeDoc: classicTheme as unknown as ThemeDocument,
+          data: profileData as ResumeData,
+        });
 
         const response = await generatePdfFromHtml(html);
         if (response.data) {
