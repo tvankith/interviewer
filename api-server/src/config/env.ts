@@ -34,6 +34,7 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   directUrl: required('DIRECT_URL'),
   aiServerUrl: required('AI_SERVER_URL'),
+  aiServerInternalSecret: required('AI_SERVER_INTERNAL_SECRET'),
   supabaseUrl: required('SUPABASE_URL'),
   supabaseAnonKey: required('SUPABASE_ANON_KEY'),
   jwtSecret: required('SUPABASE_JWT_SECRET'),

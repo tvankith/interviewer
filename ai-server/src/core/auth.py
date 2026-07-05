@@ -1,4 +1,5 @@
 import logging
+import time
 
 import jwt
 from fastapi import HTTPException, Request, status
@@ -7,61 +8,72 @@ from core.config import CONFIG
 
 logger = logging.getLogger(__name__)
 
-_jwks_client: jwt.PyJWKClient | None = None
+TOKEN_TTL_SECONDS = 5 * 60
+TOKEN_ALGORITHM = "HS256"
+
+INTERNAL_ASSERTION_AUDIENCE = "ai-server-token-issuance"
 
 
-def _get_jwks_client() -> jwt.PyJWKClient:
-    global _jwks_client
-    if _jwks_client is None:
-        _jwks_client = jwt.PyJWKClient(
-            f"{CONFIG.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
-        )
-    return _jwks_client
-
-
-def _get_token_from_request(request: Request) -> str | None:
-    # Two callers hit this: the browser, calling ai-server directly with
-    # withCredentials (access_token cookie, no header); and api-server,
-    # proxying thread-message requests server-to-server with the token
-    # forwarded as a Bearer header (no cookie in that context). Check the
-    # header first, then fall back to the cookie — mirrors api-server's
-    # own getTokenFromRequest in src/middleware/auth.ts.
+def _get_bearer_token(request: Request) -> str | None:
     authorization = request.headers.get("authorization")
-    print("authorization: ", authorization)
-    if authorization:
-        parts = authorization.split(" ")
-        if len(parts) == 2 and parts[0].lower() == "bearer":
-            return parts[1]
+    if not authorization:
+        return None
+    parts = authorization.split(" ")
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
+    return None
 
-    return request.cookies.get("access_token")
+
+def create_access_token(user_id: str) -> str:
+    """Mint a short-lived, ai-server-issued session token for user_id.
+
+    Replaces validating Supabase JWTs directly on every route: api-server
+    (which still owns the Supabase auth relationship) exchanges a validated
+    Supabase session for one of these via require_internal_assertion below,
+    and the frontend uses it to talk to ai-server directly from then on.
+    """
+    now = int(time.time())
+    payload = {"sub": user_id, "iat": now, "exp": now + TOKEN_TTL_SECONDS}
+    return jwt.encode(payload, CONFIG.AI_SERVER_TOKEN_SECRET, algorithm=TOKEN_ALGORITHM)
 
 
-def _decode_access_token(token: str) -> dict:
+def require_internal_assertion(request: Request) -> str:
+    """Gate on the token-issuance endpoint: only api-server should ever call
+    it. api-server signs a short-lived (~30s), user-scoped assertion with the
+    shared AI_SERVER_INTERNAL_SECRET after validating the candidate's own
+    Supabase session — the identity travels inside that signed assertion,
+    not as a separate field alongside a bare secret, so a leaked assertion
+    is both time-boxed and can't be replayed to mint a token for any other
+    user_id."""
+    assertion = _get_bearer_token(request)
+    if not assertion:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing assertion")
+
     try:
-        header = jwt.get_unverified_header(token)
-        alg = header.get("alg")
-
-        # HS256 with SUPABASE_JWT_SECRET (development); RS256/ES256 via
-        # Supabase's JWKS endpoint (production) — mirrors api-server's
-        # decodeAccessToken in src/utils/auth.ts. Supabase always sets
-        # aud="authenticated" on logged-in users' tokens; PyJWT (unlike
-        # jsonwebtoken) raises InvalidAudienceError if aud is present but
-        # no audience= is passed, so it must be supplied explicitly here.
-        if alg == "HS256":
-            return jwt.decode(
-                token, CONFIG.SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated"
-            )
-        if alg in ("RS256", "ES256"):
-            signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
-            return jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=["RS256", "ES256"],
-                audience="authenticated",
-            )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Unsupported algorithm: {alg}"
+        payload = jwt.decode(
+            assertion,
+            CONFIG.AI_SERVER_INTERNAL_SECRET,
+            algorithms=[TOKEN_ALGORITHM],
+            audience=INTERNAL_ASSERTION_AUDIENCE,
         )
+    except jwt.InvalidTokenError:
+        logger.warning("auth_failed reason=invalid_internal_assertion")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized") from None
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid assertion payload")
+
+    return user_id
+
+
+async def require_user_id(request: Request) -> str:
+    token = _get_bearer_token(request)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
+
+    try:
+        payload = jwt.decode(token, CONFIG.AI_SERVER_TOKEN_SECRET, algorithms=[TOKEN_ALGORITHM])
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
@@ -71,15 +83,6 @@ def _decode_access_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         ) from exc
 
-
-async def require_user_id(request: Request) -> str:
-    print("require_user_id")
-    token = _get_token_from_request(request)
-
-    if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
-
-    payload = _decode_access_token(token)
     user_id = payload.get("sub")
     if not user_id:
         logger.warning("auth_failed reason=invalid_payload")

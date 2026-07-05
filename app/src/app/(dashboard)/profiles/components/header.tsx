@@ -21,7 +21,7 @@ const Header = (props: {
                         }`}
                 >
                     <FileText size={13} />
-                    Edit Resume
+                    Edit Resume1
                 </button>
                 <button
                     onClick={() => setMode("spec")}
@@ -31,7 +31,7 @@ const Header = (props: {
                         }`}
                 >
                     <Pen size={13} />
-                    Spec
+                    Spec1``
                 </button>
             </div>
             <div className="flex items-center gap-3">

@@ -16,6 +16,7 @@ configure_logging(CONFIG.LOG_LEVEL)
 
 from agent.graph import lifespan_checkpointer, shutdown_langfuse
 from api.agent import router as agent_router
+from api.auth import router as auth_router
 from core.auth import require_user_id
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+app.include_router(auth_router, prefix="/api")
 app.include_router(agent_router, prefix="/api", dependencies=[Depends(require_user_id)])
 
 

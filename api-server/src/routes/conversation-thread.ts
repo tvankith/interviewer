@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { ConversationThreadService } from '../services/conversation-thread';
-import { authGuard, getTokenFromRequest } from '../middleware/auth';
+import { authGuard } from '../middleware/auth';
 
 const conversationThreadService = new ConversationThreadService();
 
@@ -35,8 +35,7 @@ export async function conversationThreadRoutes(fastify: FastifyInstance): Promis
         const messages = await conversationThreadService.getThreadMessages(
           request.userId!,
           candidateId,
-          threadId,
-          getTokenFromRequest(request)!
+          threadId
         );
 
         if (!messages) {
