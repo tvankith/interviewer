@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -9,6 +9,7 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
@@ -36,20 +37,31 @@ import {
   $generateNodesFromDOM,
 } from "@lexical/html";
 
-type HtmlModeProps = {
+type SharedProps = {
+  placeholder?: string;
+  className?: string;
+  /** Renders the outer bordered/background box. Set false to blend into surrounding content (e.g. inline editing). Default true. */
+  bordered?: boolean;
+  /** "static" renders the toolbar inline above the content, pushing it down. "floating" overlays the toolbar above the content without affecting layout. Default "static". */
+  toolbarVariant?: "static" | "floating";
+  /** Extra controls appended to the end of the toolbar row (e.g. save/cancel). */
+  toolbarTrailing?: ReactNode;
+  /** Focuses the editor on mount. */
+  autoFocus?: boolean;
+  /** CSS min-height for the editable area. Default "140px". */
+  minHeight?: string;
+};
+
+type HtmlModeProps = SharedProps & {
   format?: "html";
   value?: string;
   onChange?: (html: string) => void;
-  placeholder?: string;
-  className?: string;
 };
 
-type LexicalModeProps = {
+type LexicalModeProps = SharedProps & {
   format: "lexical";
   value?: SerializedEditorState | null;
   onChange?: (state: SerializedEditorState) => void;
-  placeholder?: string;
-  className?: string;
 };
 
 type Props = HtmlModeProps | LexicalModeProps;
@@ -57,10 +69,10 @@ type Props = HtmlModeProps | LexicalModeProps;
 const TOOLBAR_BTN =
   "px-2 py-1 text-xs rounded hover:bg-accent hover:text-accent-foreground transition-colors";
 
-function Toolbar() {
+function ToolbarButtons() {
   const [editor] = useLexicalComposerContext();
   return (
-    <div className="flex flex-wrap gap-1 border-b px-2 py-1">
+    <>
       <button
         type="button"
         className={TOOLBAR_BTN}
@@ -124,6 +136,29 @@ function Toolbar() {
       >
         Clear
       </button>
+    </>
+  );
+}
+
+function StaticToolbar({ trailing }: { trailing?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1 border-b px-2 py-1">
+      <ToolbarButtons />
+      {trailing && <div className="ml-auto flex items-center gap-1">{trailing}</div>}
+    </div>
+  );
+}
+
+function FloatingToolbar({ trailing }: { trailing?: ReactNode }) {
+  return (
+    <div className="absolute -top-10 left-0 z-10 flex items-center gap-1 rounded-md border border-input bg-popover px-1 py-1 shadow-md">
+      <ToolbarButtons />
+      {trailing && (
+        <>
+          <div className="mx-1 h-4 w-px bg-border" />
+          {trailing}
+        </>
+      )}
     </div>
   );
 }
@@ -170,7 +205,16 @@ function LoadInitialValue({
 }
 
 export default function RichTextEditor(props: Props) {
-  const { placeholder, className, value } = props;
+  const {
+    placeholder,
+    className,
+    value,
+    bordered = true,
+    toolbarVariant = "static",
+    toolbarTrailing,
+    autoFocus,
+    minHeight = "140px",
+  } = props;
   const format = props.format ?? "html";
 
   const initialConfig = {
@@ -185,19 +229,20 @@ export default function RichTextEditor(props: Props) {
   return (
     <div
       className={cn(
-        "rounded-md border border-input bg-background focus-within:ring-1 focus-within:ring-ring",
+        bordered && "rounded-md border border-input bg-background focus-within:ring-1 focus-within:ring-ring",
         className
       )}
     >
       <LexicalComposer initialConfig={initialConfig}>
-        <Toolbar />
+        {toolbarVariant === "static" && <StaticToolbar trailing={toolbarTrailing} />}
 
-        <div className="relative min-h-[140px] px-3 py-2">
+        <div className="relative px-3 py-2" style={{ minHeight }}>
+          {toolbarVariant === "floating" && <FloatingToolbar trailing={toolbarTrailing} />}
+
           <RichTextPlugin
             contentEditable={
             <ContentEditable
               className="
-                min-h-[120px]
                 outline-none
                 text-sm
                 max-w-none
@@ -210,6 +255,7 @@ export default function RichTextEditor(props: Props) {
                 [&_ol]:space-y-1
                 [&_li]:pl-2
               "
+              style={{ minHeight }}
             />
             }
             placeholder={
@@ -222,6 +268,7 @@ export default function RichTextEditor(props: Props) {
 
           <HistoryPlugin />
           <ListPlugin />
+          {autoFocus && <AutoFocusPlugin />}
 
           <OnChangePlugin
             onChange={(editorState: EditorState, editor) => {
