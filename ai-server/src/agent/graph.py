@@ -8,8 +8,6 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.tools import BaseTool, StructuredTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langfuse import Langfuse, propagate_attributes
-from langfuse.langchain import CallbackHandler
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
@@ -155,10 +153,15 @@ _checkpointer: AsyncPostgresSaver | None = None
 
 # Opt-in and fail-open: without both keys configured, no Langfuse client is
 # created and the agent runs exactly as it did before this integration.
-_langfuse_client: Langfuse | None = None
-_langfuse_handler: CallbackHandler | None = None
+# Imported lazily below so the (fairly heavy) langfuse package is never
+# loaded at all on the common path where tracing is disabled.
+_langfuse_client: Any | None = None
+_langfuse_handler: Any | None = None
 
 if CONFIG.LANGFUSE_ENABLED:
+    from langfuse import Langfuse
+    from langfuse.langchain import CallbackHandler
+
     _langfuse_client = Langfuse(
         public_key=CONFIG.LANGFUSE_PUBLIC_KEY,
         secret_key=CONFIG.LANGFUSE_SECRET_KEY,
@@ -282,6 +285,8 @@ async def invoke_agent(
     config: dict = {"configurable": {"thread_id": thread_id}}
     trace_attributes = nullcontext()
     if _langfuse_handler is not None:
+        from langfuse import propagate_attributes
+
         config["callbacks"] = [_langfuse_handler]
         attrs: dict = {"session_id": thread_id, "tags": ["ai-server"]}
         if candidate_id:
