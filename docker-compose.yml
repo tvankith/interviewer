@@ -52,6 +52,7 @@ services:
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      PDF_GENERATE_API_URL: ${PDF_GENERATE_API_URL}
     volumes:
       - ./api-server:/app # full source (tsconfig, prisma, src, etc.)
       - api_server_node_modules:/app/node_modules # container-built modules overlay host

@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef } from "react";
-import { generateResumePdf } from "@/app/(dashboard)/profiles/actions";
 import CloseButton from "@/app/(dashboard)/profiles/components/close-button";
 import classicTemplate from "@/resume-engine/templates/classic.template.json";
 import classicTheme from "@/resume-engine/templates/classic.theme.json";
@@ -40,40 +39,6 @@ function PdfContent() {
   const [error, setError] = useState<{ message: string; code?: string } | null>(null);
   const generateAttempted = useRef(false);
 
-  useEffect(() => {
-    if (generateAttempted.current) return;
-    generateAttempted.current = true;
-
-    const generatePdf = async () => {
-      try {
-        const profileData = await getFromDB("profileDraft");
-        if (!profileData) {
-          setError({ message: "No resume data found. Please save your resume first." });
-          return;
-        }
-
-        const response = await generateResumePdf({
-          templateDoc: classicTemplate as unknown as TemplateDocument,
-          themeDoc: classicTheme as unknown as ThemeDocument,
-          data: profileData as ResumeData,
-        });
-        if (response.data) {
-          setPdfUrl(response.data);
-        }
-        else {
-          if (response?.message)
-            setError({
-              message: response?.message,
-              code: response?.code
-            })
-        }
-      } catch (err) {
-
-      }
-    };
-
-    generatePdf();
-  }, []);
   if (error) {
     console.log("error: ", error)
     const isRateLimit = error.code === "RATE_LIMIT_EXCEEDED";

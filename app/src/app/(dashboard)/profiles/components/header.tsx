@@ -1,7 +1,6 @@
 import { UseMutationResult } from "@tanstack/react-query";
 import { FileText, Upload, Download, Pen, CheckCircle, XCircle } from "lucide-react"
 import { Dispatch, SetStateAction, useState } from "react"
-import { generateResumePdf } from "@/app/(dashboard)/profiles/actions";
 import type { ResumeData } from "@/resume-engine/types/resume-data";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
@@ -20,25 +19,25 @@ const Header = (props: {
     const [downloadError, setDownloadError] = useState<string | null>(null);
 
     const handleDownloadClick = async () => {
-        setIsDownloading(true);
-        setDownloadError(null);
-        try {
-            const response = await generateResumePdf({ templateDoc, themeDoc, data: values });
-            if (!response.success || !response.data) {
-                setDownloadError(response.message || "Failed to generate PDF");
-                return;
-            }
-            const link = document.createElement("a");
-            link.href = `/api/pdf/download?url=${encodeURIComponent(response.data)}&filename=resume.pdf`;
-            link.download = "resume.pdf";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch {
-            setDownloadError("Failed to generate PDF");
-        } finally {
-            setIsDownloading(false);
-        }
+        // setIsDownloading(true);
+        // setDownloadError(null);
+        // try {
+        //     const response = await generateResumePdf({ templateDoc, themeDoc, data: values });
+        //     if (!response.success || !response.data) {
+        //         setDownloadError(response.message || "Failed to generate PDF");
+        //         return;
+        //     }
+        //     const link = document.createElement("a");
+        //     link.href = `/api/pdf/download?url=${encodeURIComponent(response.data)}&filename=resume.pdf`;
+        //     link.download = "resume.pdf";
+        //     document.body.appendChild(link);
+        //     link.click();
+        //     document.body.removeChild(link);
+        // } catch {
+        //     setDownloadError("Failed to generate PDF");
+        // } finally {
+        //     setIsDownloading(false);
+        // }
     };
 
     return (

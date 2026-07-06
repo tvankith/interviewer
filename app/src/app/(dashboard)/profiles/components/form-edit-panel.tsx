@@ -6,7 +6,6 @@ import { FORM_SECTIONS, DESIGN_SECTIONS, FLAT_SECTIONS, type SectionId } from ".
 import SectionFormContent from "./section-form-content";
 import { useState } from "react";
 import ResumeCanvas from "@/resume-engine/render/resume-canvas";
-import { generateResumePdf } from "@/app/(dashboard)/profiles/actions";
 import type { ResumeData } from "@/resume-engine/types/resume-data";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
@@ -14,6 +13,7 @@ import { CandidateFormValues } from "../profile/compose/types";
 import type { UseFormSetValue } from "react-hook-form";
 import { Menu, Pen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { renderResumeHtmlApi, generateLexicalPdfApi } from "@/apis/resume-pdf";
 
 type Props = {
     activeSection: SectionId;
@@ -36,13 +36,10 @@ export default function FormEditPanel({ activeSection, onSelectSection, values, 
         setIsDownloading(true);
         setDownloadError(null);
         try {
-            const response = await generateResumePdf({ templateDoc, themeDoc, data: values as ResumeData });
-            if (!response.success || !response.data) {
-                setDownloadError(response.message || "Failed to generate PDF");
-                return;
-            }
+            const html = await renderResumeHtmlApi({ templateDoc, themeDoc, data: values as ResumeData });
+            const url = await generateLexicalPdfApi(html);
             const link = document.createElement("a");
-            link.href = response.data;
+            link.href = url;
             link.download = "resume.pdf";
             link.target = "_blank";
             link.rel = "noopener noreferrer";

@@ -39,4 +39,7 @@ export const env = {
   supabaseAnonKey: required('SUPABASE_ANON_KEY'),
   jwtSecret: required('SUPABASE_JWT_SECRET'),
   googleApiKey: required('GOOGLE_API_KEY'),
+  // Optional: the resume/lexical-doc-to-PDF endpoints 404/500 at call time
+  // (not at boot) when this is unset, since the lambda URL isn't provisioned yet.
+  pdfGenerateApiUrl: process.env.PDF_GENERATE_API_URL,
 } as const;
