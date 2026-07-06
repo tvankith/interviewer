@@ -6,6 +6,7 @@ import { FORM_SECTIONS, DESIGN_SECTIONS, FLAT_SECTIONS, type SectionId } from ".
 import SectionFormContent from "./section-form-content";
 import { useState } from "react";
 import ResumeCanvas from "@/resume-engine/render/resume-canvas";
+import { generateResumePdf } from "@/app/(dashboard)/profiles/actions";
 import type { ResumeData } from "@/resume-engine/types/resume-data";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
@@ -27,6 +28,33 @@ type Props = {
 export default function FormEditPanel({ activeSection, onSelectSection, values, templateDoc, themeDoc, setValue, onPreviewClick }: Props) {
     const [tab, setTab] = useState("preview")
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [downloadError, setDownloadError] = useState<string | null>(null)
+
+    const handleDownloadClick = async () => {
+        setIsMenuOpen(false);
+        setIsDownloading(true);
+        setDownloadError(null);
+        try {
+            const response = await generateResumePdf({ templateDoc, themeDoc, data: values as ResumeData });
+            if (!response.success || !response.data) {
+                setDownloadError(response.message || "Failed to generate PDF");
+                return;
+            }
+            const link = document.createElement("a");
+            link.href = response.data;
+            link.download = "resume.pdf";
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch {
+            setDownloadError("Failed to generate PDF");
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     return (
         <div className="flex h-full w-full overflow-auto">
@@ -53,6 +81,18 @@ export default function FormEditPanel({ activeSection, onSelectSection, values, 
                             >
                                 Preview PDF
                             </button>
+                            <button
+                                onClick={handleDownloadClick}
+                                disabled={isDownloading}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDownloading ? "Downloading..." : "Download PDF"}
+                            </button>
+                        </div>
+                    )}
+                    {downloadError && (
+                        <div className="absolute left-full top-full mt-1 ml-2 w-48 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1 z-10">
+                            {downloadError}
                         </div>
                     )}
                 </div>

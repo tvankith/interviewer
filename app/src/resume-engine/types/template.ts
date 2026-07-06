@@ -17,9 +17,9 @@ export type TypographyToken = "h1" | "h2" | "body" | "small" | "label";
 export type EditableConfig = {
   /** Can the resume owner edit the bound content via click-to-edit. */
   editable: boolean;
-  /** Can this node be removed from the layout. Schema-only in MVP — no UI reads it yet. */
+  /** Shows a hover "remove" control that clears this node's bound value. */
   removable?: boolean;
-  /** For List repeaters: can items be added/removed. Schema-only in MVP. */
+  /** For List repeaters and chip lists: shows hover "add item" / per-item "remove" controls. */
   addable?: boolean;
 };
 
@@ -39,10 +39,14 @@ export type TextNodeProps = {
   separator?: string;
   /** Renders using the theme's muted color instead of the primary text color. */
   muted?: boolean;
+  /** Shown (interactive mode only) in place of empty content, e.g. "Click to add your name". */
+  placeholder?: string;
 };
 
 export type RichTextNodeProps = {
   variant?: TypographyToken;
+  /** Shown (interactive mode only) in place of empty content, e.g. "Click to add a summary". */
+  placeholder?: string;
 };
 
 export type ListNodeProps = {
@@ -51,6 +55,10 @@ export type ListNodeProps = {
   /** Repeater mode: render `itemTemplate` once per element of the bound array. */
   itemTemplate?: TemplateNode;
   gap?: SpacingToken;
+  /** Shown (interactive mode only) in place of an empty array, e.g. "No experience added yet". */
+  placeholder?: string;
+  /** Label for the repeater's "+ Add" control, e.g. "Add experience". Requires `editable.addable`. */
+  addLabel?: string;
 };
 
 export type PageNodeProps = {

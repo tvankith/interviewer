@@ -2,16 +2,15 @@ import DOMPurify from "isomorphic-dompurify";
 import { cn } from "@/lib/utils";
 import { registerNodeType, type NodeComponentProps } from "../node-registry";
 import { resolveBinding } from "../../binding/resolve-binding";
-import { lexicalJsonToReact } from "../../lexical-json/lexical-json-to-react";
+import { lexicalDocHasText, lexicalJsonToReact } from "../../lexical-json/lexical-json-to-react";
 import { isLexicalDoc } from "../../types/lexical";
 import type { RichTextNodeProps } from "../../types/template";
 
 const ALLOWED_TAGS = ["b", "i", "em", "strong", "a", "p", "br", "span", "ul", "ol", "li"];
 
-function RichTextNode({ node, scope, theme }: NodeComponentProps) {
+function RichTextNode({ node, scope, theme, mode }: NodeComponentProps) {
   const props = (node.props as RichTextNodeProps) || {};
   const value = node.binding ? resolveBinding(node.binding, scope.value) : undefined;
-  if (!value) return null;
 
   const style = { fontSize: theme.sizes[props.variant ?? "body"], color: theme.colors.text };
   // Tailwind's preflight resets `list-style: none` on ul/ol, so the plain
@@ -25,27 +24,33 @@ function RichTextNode({ node, scope, theme }: NodeComponentProps) {
     node.className
   );
 
-  if (isLexicalDoc(value)) {
-    const rendered = lexicalJsonToReact(value);
-    if (!rendered) return null;
+  if (isLexicalDoc(value) && lexicalDocHasText(value)) {
     return (
       <div className={richTextClassName} style={style}>
-        {rendered}
+        {lexicalJsonToReact(value)}
       </div>
     );
   }
 
   // Legacy HTML-string data (pre-migration) — sanitized fallback, matching
   // the current app's existing DOMPurify usage in resume-preview.tsx.
-  if (typeof value === "string") {
+  if (typeof value === "string" && value.trim()) {
     const sanitized = DOMPurify.sanitize(value, { ALLOWED_TAGS, ALLOWED_ATTR: ["href"] });
-    if (!sanitized.trim()) return null;
+    if (sanitized.trim()) {
+      return <div className={richTextClassName} style={style} dangerouslySetInnerHTML={{ __html: sanitized }} />;
+    }
+  }
+
+  // Empty. A downloaded/printed resume (mode="static") never shows synthetic
+  // placeholder text for data the candidate hasn't entered — only the
+  // interactive editor does, where clicking it opens the same editor as
+  // non-empty content (RenderNode wraps any editable node in EditableOverlay
+  // regardless of what it renders).
+  if (mode === "interactive" && node.editable?.editable) {
     return (
-      <div
-        className={richTextClassName}
-        style={style}
-        dangerouslySetInnerHTML={{ __html: sanitized }}
-      />
+      <div className={richTextClassName} style={{ ...style, color: theme.colors.muted, fontStyle: "italic" }}>
+        {props.placeholder ?? "Click to add"}
+      </div>
     );
   }
 

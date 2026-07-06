@@ -54,6 +54,50 @@ export function setEditableWrapper(component: EditableWrapperComponent): void {
 }
 
 /**
+ * Hover controls for List repeaters (add/remove an entry) and chip lists
+ * (remove a single chip). Same rationale as `editableWrapper`: the actual
+ * components live in registry/editable-overlay.tsx (Radix/React-state), so
+ * list-node.tsx only ever sees this plain injected reference, never a
+ * "use client" import.
+ */
+export type RepeaterItemWrapperProps = {
+  listAbsoluteBinding: string;
+  items: unknown[];
+  index: number;
+  children: ReactNode;
+};
+
+export type AddItemButtonProps = {
+  listAbsoluteBinding: string;
+  items: unknown[];
+  blankItem: unknown;
+  label: string;
+};
+
+export type RemovableChipProps = {
+  listAbsoluteBinding: string;
+  items: unknown[];
+  index: number;
+  children: ReactNode;
+};
+
+export type ListControls = {
+  RepeaterItemWrapper: ComponentType<RepeaterItemWrapperProps>;
+  AddItemButton: ComponentType<AddItemButtonProps>;
+  RemovableChip: ComponentType<RemovableChipProps>;
+};
+
+let listControls: ListControls | null = null;
+
+export function setListControls(controls: ListControls): void {
+  listControls = controls;
+}
+
+export function getListControls(): ListControls | null {
+  return listControls;
+}
+
+/**
  * Single choke point for rendering a template node: resolves its binding,
  * renders the registered component for its type, and wraps the result in
  * click-to-edit when appropriate. Adding a new NodeType later only requires

@@ -1,9 +1,8 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef } from "react";
-import { generatePdfFromHtml } from "@/app/(dashboard)/profiles/actions";
+import { generateResumePdf } from "@/app/(dashboard)/profiles/actions";
 import CloseButton from "@/app/(dashboard)/profiles/components/close-button";
-import { renderResumeToHtmlDocument } from "@/resume-engine/render/render-static-html";
 import classicTemplate from "@/resume-engine/templates/classic.template.json";
 import classicTheme from "@/resume-engine/templates/classic.theme.json";
 import type { TemplateDocument } from "@/resume-engine/types/template";
@@ -53,13 +52,11 @@ function PdfContent() {
           return;
         }
 
-        const html = renderResumeToHtmlDocument({
+        const response = await generateResumePdf({
           templateDoc: classicTemplate as unknown as TemplateDocument,
           themeDoc: classicTheme as unknown as ThemeDocument,
           data: profileData as ResumeData,
         });
-
-        const response = await generatePdfFromHtml(html);
         if (response.data) {
           setPdfUrl(response.data);
         }
@@ -142,10 +139,19 @@ function PdfContent() {
   }
 
   return (
-    <iframe
-      src={pdfUrl}
-      className="w-full h-[calc(100%-64px)] border-0"
-    />
+    <div className="relative w-full h-[calc(100%-64px)]">
+      <a
+        href={`/api/pdf/download?url=${encodeURIComponent(pdfUrl)}`}
+        download
+        className="absolute top-3 right-3 z-10 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 active:bg-blue-800 transition-colors"
+      >
+        Download PDF
+      </a>
+      <iframe
+        src={pdfUrl}
+        className="w-full h-full border-0"
+      />
+    </div>
   );
 }
 

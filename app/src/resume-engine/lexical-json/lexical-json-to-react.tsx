@@ -66,3 +66,20 @@ export function lexicalJsonToReact(doc: SerializedEditorState | null | undefined
   const root = doc.root as unknown as AnyNode;
   return renderChildren(root);
 }
+
+function nodeHasText(node: AnyNode): boolean {
+  if (node.type === "text") return Boolean(node.text?.trim());
+  return (node.children ?? []).some(nodeHasText);
+}
+
+/**
+ * True if the doc contains any non-whitespace text. A freshly-initialized
+ * doc (e.g. EMPTY_LEXICAL_DOC) is a structurally valid root+paragraph with
+ * no text, so `isLexicalDoc` alone can't distinguish "untouched" from
+ * "has content" — used by has-content.ts to decide whether a Section is
+ * empty.
+ */
+export function lexicalDocHasText(doc: SerializedEditorState | null | undefined): boolean {
+  if (!doc || !isLexicalDoc(doc)) return false;
+  return nodeHasText(doc.root as unknown as AnyNode);
+}

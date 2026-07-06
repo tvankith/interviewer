@@ -22,6 +22,7 @@ import type { SectionId } from "./profile-sections";
 import { plainTextToLexicalJson } from "@/resume-engine/lexical-json/plain-text-to-lexical-json";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
+import type { ResumeData } from "@/resume-engine/types/resume-data";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -377,7 +378,15 @@ export default function ProfileEditor({
             <div className={`grid gap-1 h-screen ${["form"].includes(mode) ? "grid-cols-3 grid-rows-[60px_1fr]" : "grid-cols-1 grid-rows-[60px_1fr]"}`}>
 
                 <div className="col-span-3">
-                    <Header parseResume={parseResumeMutation} mode={mode} setMode={setMode} importStatus={importStatus} />
+                    <Header
+                        parseResume={parseResumeMutation}
+                        mode={mode}
+                        setMode={setMode}
+                        importStatus={importStatus}
+                        templateDoc={templateDoc}
+                        themeDoc={themeDoc}
+                        values={values as ResumeData}
+                    />
                 </div>
                 {mode === "form" && (
                     <div className="col-span-2 min-h-0 p-2 max-h-full flex">

@@ -3,8 +3,9 @@
   "id": "classic-theme-v1",
   "name": "Classic",
   "fonts": {
-    "base": "Georgia, 'Times New Roman', serif",
-    "heading": "Georgia, 'Times New Roman', serif"
+    "base": "'Gelasio', Georgia, 'Times New Roman', serif",
+    "heading": "'Gelasio', Georgia, 'Times New Roman', serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400;0,700;1,400;1,700&display=swap"
   },
   "colors": {
     "text": "#1a1a1a",

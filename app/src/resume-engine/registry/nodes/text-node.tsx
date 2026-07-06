@@ -12,7 +12,7 @@ const VARIANT_STYLE: Record<TypographyToken, { fontWeight?: number }> = {
   label: { fontWeight: 600 },
 };
 
-function TextNode({ node, scope, theme }: NodeComponentProps) {
+function TextNode({ node, scope, theme, mode }: NodeComponentProps) {
   const props = (node.props as TextNodeProps) || {};
   const bound = node.binding ? resolveBinding(node.binding, scope.value) : undefined;
   const value = bound != null && bound !== "" ? String(bound) : undefined;
@@ -27,16 +27,33 @@ function TextNode({ node, scope, theme }: NodeComponentProps) {
     }
   }
 
-  if (!content) return null;
-
   const variant = props.variant ?? "body";
+  const Tag = props.as ?? "span";
+
+  if (!content) {
+    // A downloaded/printed resume (mode="static") never shows synthetic
+    // placeholder text for data the candidate hasn't entered — only the
+    // interactive editor does, where clicking it opens the same editor as
+    // non-empty content (RenderNode wraps any editable node in
+    // EditableOverlay regardless of what it renders).
+    if (mode === "interactive" && node.editable?.editable) {
+      return (
+        <Tag
+          className={cn(node.className)}
+          style={{ fontSize: theme.sizes[variant], color: theme.colors.muted, fontStyle: "italic" }}
+        >
+          {props.placeholder ?? "Click to add"}
+        </Tag>
+      );
+    }
+    return null;
+  }
+
   const style = {
     fontSize: theme.sizes[variant],
     color: props.muted ? theme.colors.muted : theme.colors.text,
     ...VARIANT_STYLE[variant],
   };
-
-  const Tag = props.as ?? "span";
 
   const hrefValue = props.hrefBinding ? resolveBinding(props.hrefBinding, scope.value) : value;
   if (props.href && typeof hrefValue === "string" && hrefValue) {
