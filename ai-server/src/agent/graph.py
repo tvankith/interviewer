@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 from core.config import CONFIG
+from rag.retrieval.tool import RETRIEVE_RESUME_GUIDANCE_TOOL, RETRIEVE_RESUME_GUIDANCE_TOOL_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,15 @@ SYSTEM_PROMPT = (
     "You can read the candidate's profile with the available read-only tools. "
     "You have no ability to save, update, or persist any change to the "
     "candidate's profile — never claim to have done so.\n\n"
+    "At the start of the conversation, before asking any interview question, "
+    "call get_profile_specs and read the spec named 'resume.md' from the "
+    "returned list — use its content to ground your interview questions and "
+    "any resume suggestions in what the candidate has actually written. If "
+    "no spec named 'resume.md' is present, continue without it.\n\n"
+    "Before drafting or rewriting any resume content (a summary, an "
+    f"experience bullet, etc.), call {RETRIEVE_RESUME_GUIDANCE_TOOL_NAME} "
+    "with a query describing the writing guidance you need, and ground your "
+    "suggestion in the guidance it returns.\n\n"
     "When you want to suggest an edit to the candidate's resume, call "
     f"{PROPOSE_PROFILE_UPDATE_TOOL_NAME} with only the fields you are "
     "changing. This shows the candidate a diff to approve or reject "
@@ -211,12 +221,13 @@ def _build_graph(checkpointer: AsyncPostgresSaver, tools: list[BaseTool]):
         model="gemini-2.5-flash",
         google_api_key=CONFIG.GOOGLE_API_KEY,
     )
-    # propose_profile_update is always bound, regardless of candidate_id/MCP
-    # tool availability — it's local and side-effect-free, so the agent can
-    # always at least propose an edit even if MCP tools fail to load. This
-    # also guarantees the tools node is always present: no separate
-    # tools/no-tools branch is needed.
-    all_tools = [*tools, PROPOSE_PROFILE_UPDATE_TOOL]
+    # propose_profile_update and retrieve_resume_guidance are always bound,
+    # regardless of candidate_id/MCP tool availability — both are local and
+    # have no candidate-scoping dependency, so the agent can always at least
+    # propose an edit or pull writing guidance even if MCP tools fail to
+    # load. This also guarantees the tools node is always present: no
+    # separate tools/no-tools branch is needed.
+    all_tools = [*tools, PROPOSE_PROFILE_UPDATE_TOOL, RETRIEVE_RESUME_GUIDANCE_TOOL]
     logger.debug("Building graph with tools: %s", [tool.name for tool in all_tools])
     llm_with_tools = llm.bind_tools(all_tools)
 

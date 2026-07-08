@@ -35,6 +35,11 @@ class Config:
     LANGFUSE_PUBLIC_KEY: str | None
     LANGFUSE_SECRET_KEY: str | None
     LANGFUSE_BASE_URL: str
+    RAG_QDRANT_URL: str
+    RAG_QDRANT_API_KEY: str
+    RAG_QDRANT_COLLECTION: str
+    RAG_EMBEDDING_MODEL: str
+    RAG_TOP_K: int
 
     @property
     def LANGFUSE_ENABLED(self) -> bool:
@@ -59,6 +64,11 @@ def load_config() -> Config:
         LANGFUSE_PUBLIC_KEY=_get_env_optional("LANGFUSE_PUBLIC_KEY"),
         LANGFUSE_SECRET_KEY=_get_env_optional("LANGFUSE_SECRET_KEY"),
         LANGFUSE_BASE_URL=_get_env("LANGFUSE_BASE_URL"),
+        RAG_QDRANT_URL=_get_env("RAG_QDRANT_URL"),
+        RAG_QDRANT_API_KEY=_get_env("RAG_QDRANT_API_KEY"),
+        RAG_QDRANT_COLLECTION=_get_env("RAG_QDRANT_COLLECTION", "resume_guidance"),
+        RAG_EMBEDDING_MODEL=_get_env("RAG_EMBEDDING_MODEL", "models/gemini-embedding-001"),
+        RAG_TOP_K=int(_get_env("RAG_TOP_K", "5")),
     )
 
 

@@ -1,0 +1,21 @@
+from dataclasses import dataclass
+
+from core.config import CONFIG as CORE_CONFIG
+
+
+@dataclass(frozen=True)
+class RagConfig:
+    QDRANT_URL: str
+    QDRANT_API_KEY: str
+    QDRANT_COLLECTION: str
+    EMBEDDING_MODEL: str
+    TOP_K: int
+
+
+RAG_CONFIG = RagConfig(
+    QDRANT_URL=CORE_CONFIG.RAG_QDRANT_URL,
+    QDRANT_API_KEY=CORE_CONFIG.RAG_QDRANT_API_KEY,
+    QDRANT_COLLECTION=CORE_CONFIG.RAG_QDRANT_COLLECTION,
+    EMBEDDING_MODEL=CORE_CONFIG.RAG_EMBEDDING_MODEL,
+    TOP_K=CORE_CONFIG.RAG_TOP_K,
+)

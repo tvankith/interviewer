@@ -81,6 +81,11 @@ services:
       LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL}
       AI_SERVER_TOKEN_SECRET: ${AI_SERVER_TOKEN_SECRET}
       AI_SERVER_INTERNAL_SECRET: ${AI_SERVER_INTERNAL_SECRET}
+      RAG_QDRANT_URL: ${RAG_QDRANT_URL}
+      RAG_QDRANT_API_KEY: ${RAG_QDRANT_API_KEY}
+      RAG_QDRANT_COLLECTION: ${RAG_QDRANT_COLLECTION:-resume_guidance}
+      RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-models/gemini-embedding-001}
+      RAG_TOP_K: ${RAG_TOP_K:-5}
     volumes:
       - ./ai-server:/app
       - ai_server_venv:/app/.venv # container-built venv overlay host
