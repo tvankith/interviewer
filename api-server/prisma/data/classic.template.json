@@ -177,7 +177,7 @@
                             "id": "exp-location",
                             "type": "Text",
                             "binding": "location",
-                            "editable": { "editable": true, "removable": true },
+                            "editable": { "editable": true },
                             "props": { "variant": "small", "muted": true, "placeholder": "Click to add location" }
                           }
                         ]

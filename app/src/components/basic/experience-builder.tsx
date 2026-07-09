@@ -13,6 +13,7 @@ import {
     arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
@@ -55,7 +56,17 @@ function SortableExperience({ id, exp, index, onRemove, onChange, onTechStackCha
 
     return (
         <div ref={setNodeRef} style={style}>
-            <Card className="mt-3">
+            <Card className="mt-3 relative">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-destructive"
+                    onClick={() => onRemove(index)}
+                >
+                    <X className="size-4" />
+                </Button>
+
                 <CardContent className="space-y-2 pt-4">
                     <div
                         className="flex justify-end cursor-grab active:cursor-grabbing text-muted-foreground select-none"
@@ -101,14 +112,6 @@ function SortableExperience({ id, exp, index, onRemove, onChange, onTechStackCha
                         onChange={(val) => onTechStackChange(index, val)}
                         placeholder="Add technology..."
                     />
-
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => onRemove(index)}
-                    >
-                        Remove
-                    </Button>
                 </CardContent>
             </Card>
         </div>
