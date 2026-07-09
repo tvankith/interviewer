@@ -21,8 +21,6 @@ export default function middleware(req: NextRequest) {
   const pathname =
     req.nextUrl.pathname;
 
-  console.log("[proxy debug]", pathname, "token:", !!token);
-
   const {
     dashboardRoutes,
     publicRoutes,
@@ -62,5 +60,8 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: [
+    "/profiles",
+    "/profiles/:path*",
+  ],
 };
