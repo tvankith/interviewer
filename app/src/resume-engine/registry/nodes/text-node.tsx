@@ -59,7 +59,7 @@ function TextNode({ node, scope, theme, mode }: NodeComponentProps) {
   if (props.href && typeof hrefValue === "string" && hrefValue) {
     return (
       <Tag className={cn(node.className)} style={style}>
-        <a href={hrefValue} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
+        <a href={hrefValue} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
           {content}
         </a>
       </Tag>

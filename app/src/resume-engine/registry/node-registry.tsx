@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import type { TemplateNode, NodeType } from "../types/template";
+import type { TemplateNode, NodeType, TextNodeProps } from "../types/template";
 import type { ThemeDocument } from "../types/theme";
 import type { ResumeData } from "../types/resume-data";
 import { resolveBinding, toAbsoluteBinding } from "../binding/resolve-binding";
@@ -37,6 +37,9 @@ export type EditableWrapperProps = {
   node: TemplateNode;
   value: unknown;
   absoluteBinding: string;
+  /** Set when a Text node has `hrefBinding` — lets the editor offer a second field for the link target. */
+  hrefValue?: unknown;
+  hrefAbsoluteBinding?: string;
   children: ReactNode;
 };
 
@@ -121,8 +124,19 @@ export function RenderNode(props: NodeComponentProps) {
     const Wrapper = editableWrapper;
     const value = resolveBinding(props.node.binding, props.scope.value);
     const absoluteBinding = toAbsoluteBinding(props.scope.absolutePath, props.node.binding);
+
+    const hrefBinding = props.node.type === "Text" ? (props.node.props as TextNodeProps | undefined)?.hrefBinding : undefined;
+    const hrefValue = hrefBinding ? resolveBinding(hrefBinding, props.scope.value) : undefined;
+    const hrefAbsoluteBinding = hrefBinding ? toAbsoluteBinding(props.scope.absolutePath, hrefBinding) : undefined;
+
     return (
-      <Wrapper node={props.node} value={value} absoluteBinding={absoluteBinding}>
+      <Wrapper
+        node={props.node}
+        value={value}
+        absoluteBinding={absoluteBinding}
+        hrefValue={hrefValue}
+        hrefAbsoluteBinding={hrefAbsoluteBinding}
+      >
         {rendered}
       </Wrapper>
     );

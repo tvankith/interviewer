@@ -279,24 +279,33 @@ function PopoverEditable({
   node,
   value,
   absoluteBinding,
+  hrefValue,
+  hrefAbsoluteBinding,
   children,
 }: {
   node: TemplateNode;
   value: unknown;
   absoluteBinding: string;
+  hrefValue?: unknown;
+  hrefAbsoluteBinding?: string;
   children: ReactNode;
 }) {
   const host = useContext(ResumeEditorHostContext);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<unknown>(value);
+  const [hrefDraft, setHrefDraft] = useState<unknown>(hrefValue);
 
   const handleOpenChange = (next: boolean) => {
-    if (next) setDraft(value);
+    if (next) {
+      setDraft(value);
+      setHrefDraft(hrefValue);
+    }
     setOpen(next);
   };
 
   const handleSave = () => {
     host?.onEdit(absoluteBinding, draft);
+    if (hrefAbsoluteBinding) host?.onEdit(hrefAbsoluteBinding, hrefDraft);
     setOpen(false);
   };
 
@@ -327,7 +336,20 @@ function PopoverEditable({
         )}
       </div>
       <PopoverContent className="w-80" onOpenAutoFocus={(event) => event.preventDefault()}>
-        <EditorField value={draft} onChange={setDraft} />
+        {hrefAbsoluteBinding ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Label</label>
+              <EditorField value={draft} onChange={setDraft} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">URL</label>
+              <EditorField value={hrefDraft} onChange={setHrefDraft} />
+            </div>
+          </div>
+        ) : (
+          <EditorField value={draft} onChange={setDraft} />
+        )}
         <div className="flex justify-end gap-2 pt-1">
           <button
             type="button"
@@ -360,11 +382,15 @@ export function EditableOverlay({
   node,
   value,
   absoluteBinding,
+  hrefValue,
+  hrefAbsoluteBinding,
   children,
 }: {
   node: TemplateNode;
   value: unknown;
   absoluteBinding: string;
+  hrefValue?: unknown;
+  hrefAbsoluteBinding?: string;
   children: ReactNode;
 }) {
   if (node.type === "RichText") {
@@ -376,7 +402,13 @@ export function EditableOverlay({
   }
 
   return (
-    <PopoverEditable node={node} value={value} absoluteBinding={absoluteBinding}>
+    <PopoverEditable
+      node={node}
+      value={value}
+      absoluteBinding={absoluteBinding}
+      hrefValue={hrefValue}
+      hrefAbsoluteBinding={hrefAbsoluteBinding}
+    >
       {children}
     </PopoverEditable>
   );
