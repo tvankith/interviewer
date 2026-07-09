@@ -97,8 +97,24 @@
             "id": "skills-list",
             "type": "List",
             "binding": "skills",
-            "editable": { "editable": true, "addable": true },
-            "props": { "display": "chip", "placeholder": "Click to add skills" }
+            "editable": { "addable": true },
+            "props": {
+              "gap": "sm",
+              "placeholder": "Click to add skills",
+              "addLabel": "Add category",
+              "itemTemplate": {
+                "id": "skill-group-item",
+                "type": "List",
+                "binding": "skills",
+                "editable": { "editable": true },
+                "props": {
+                  "display": "chip",
+                  "placeholder": "Click to add skills",
+                  "prefixBinding": "category",
+                  "prefixSuffix": ":"
+                }
+              }
+            }
           }
         ]
       },

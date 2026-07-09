@@ -12,7 +12,7 @@ export type ProfileEditorContextValue = {
     educations: CandidateFormValues["educations"];
     links: CandidateFormValues["links"];
     summary: CandidateFormValues["summary"];
-    skills?: string[];
+    skills?: CandidateFormValues["skills"];
     templateId?: string;
     themeId?: string;
     isParsing: boolean;

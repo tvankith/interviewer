@@ -3,6 +3,7 @@ import { axiosInstance } from "./axios-instances";
 import { mapProfileToForm } from "@/app/(dashboard)/profiles/helpers/map-profile-to-form";
 import serverApi from "@/lib/backend";
 import type { RichTextValue } from "@/resume-engine/types/lexical";
+import type { SkillGroup } from "@/design-system";
 
 export const parseResumeApi = async (input: {
   file?: File | null;
@@ -86,7 +87,7 @@ export interface Profile {
   experiences: Experience[];
   educations: Education[];
   links: SocialLink[];
-  skills: string[];
+  skills: SkillGroup[];
   template_id?: string | null;
   theme_id?: string | null;
   created_at: string;

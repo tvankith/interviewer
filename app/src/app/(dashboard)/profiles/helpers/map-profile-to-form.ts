@@ -1,6 +1,7 @@
 import { Profile } from "@/apis/profile";
 import { CandidateFormValues } from "../profile/compose/types";
 import { normalizeRichText } from "@/resume-engine/lexical-json/normalize-rich-text";
+import { toSkillGroups } from "./to-skill-groups";
 
 export const mapProfileToForm = (data: Profile): CandidateFormValues => ({
   projects: (data.projects || []).map((p) => ({
@@ -25,7 +26,7 @@ export const mapProfileToForm = (data: Profile): CandidateFormValues => ({
   location: data.location,
   summary: normalizeRichText(data.summary),
   website: data.website,
-  skills: data.skills || [],
+  skills: toSkillGroups(data.skills),
   about: "",
   resume_file: null,
   target_role: data.job_requirement?.raw_description || "",

@@ -1,4 +1,5 @@
 import type { CandidateProfile } from '../types';
+import { toSkillGroups } from './to-skill-groups';
 
 /**
  * Transform CandidateProfile from database format to API response format.
@@ -16,7 +17,7 @@ export function transformProfile(profile: CandidateProfile) {
     summary: profile.summary,
     website: profile.website,
     // Ensure arrays default to empty arrays if null
-    skills: Array.isArray(profile.skills) ? profile.skills : [],
+    skills: toSkillGroups(profile.skills),
     projects: Array.isArray(profile.projects) ? profile.projects : [],
     experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
     educations: Array.isArray(profile.educations) ? profile.educations : [],

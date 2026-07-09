@@ -63,6 +63,15 @@ export type ListNodeProps = {
   placeholder?: string;
   /** Label for the repeater's "+ Add" control, e.g. "Add experience". Requires `editable.addable`. */
   addLabel?: string;
+  /**
+   * Leaf `chip`/`comma` mode: a field (relative to the same scope as `binding`) rendered as a bold,
+   * non-wrapping label in front of the array — e.g. `category` -> "Frontend:" before the chips. Lives in the
+   * same wrapping flex flow as the items themselves, so continuation lines start flush left instead of
+   * leaving blank space under the label. Omitted entirely when it resolves empty.
+   */
+  prefixBinding?: string;
+  /** Literal text appended right after `prefixBinding`'s resolved value, e.g. ":" -> "Frontend:". */
+  prefixSuffix?: string;
 };
 
 export type PageNodeProps = {

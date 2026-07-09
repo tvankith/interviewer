@@ -1,4 +1,5 @@
 import type { RichTextValue } from "./lexical";
+import type { SkillGroup } from "@/components/basic/skill-builder";
 
 export type ResumeExperience = {
   company?: string;
@@ -42,7 +43,7 @@ export type ResumeData = {
   location?: string;
   summary?: RichTextValue;
   website?: string;
-  skills?: string[];
+  skills?: SkillGroup[];
   links?: ResumeSocialLink[];
   experiences?: ResumeExperience[];
   projects?: ResumeProject[];

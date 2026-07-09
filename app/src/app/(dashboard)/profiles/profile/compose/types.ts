@@ -1,4 +1,5 @@
 import type { RichTextValue } from "@/resume-engine/types/lexical";
+import type { SkillGroup } from "@/design-system";
 
 type Project = {
     name?: string;
@@ -41,7 +42,7 @@ export type CandidateFormValues = {
     phone?: string;
     location?: string;
     summary?: RichTextValue;
-    skills?: string[];
+    skills?: SkillGroup[];
     website?: string;
     template_id?: string;
     theme_id?: string;
@@ -70,7 +71,7 @@ export type CandidatePayload = {
     phone?: string;
     location?: string;
     summary?: RichTextValue;
-    skills?: string[];
+    skills?: SkillGroup[];
     website?: string;
     target_role?: string;
 };

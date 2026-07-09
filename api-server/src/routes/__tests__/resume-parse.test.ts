@@ -43,9 +43,19 @@ beforeEach(() => {
 });
 
 describe('POST /api/profile/resume/parse', () => {
-  it('returns 200 with the parsed resume', async () => {
+  it('returns 200 with categorized skill groups', async () => {
     const app = await buildApp();
-    const parsed = { name: 'Jane Doe', skills: ['React'], links: [], projects: [], experiences: [], educations: [] };
+    const parsed = {
+      name: 'Jane Doe',
+      skills: [
+        { category: 'Languages', skills: ['Python', 'Go'] },
+        { category: 'Cloud', skills: ['AWS', 'GCP'] },
+      ],
+      links: [],
+      projects: [],
+      experiences: [],
+      educations: [],
+    };
     mockParser.parse.mockResolvedValue(parsed);
 
     const { body, headers } = multipartBody('resume.pdf', '%PDF-1.4 fake', 'application/pdf');
@@ -57,7 +67,38 @@ describe('POST /api/profile/resume/parse', () => {
     });
 
     expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.body).name).toBe('Jane Doe');
+    const responseBody = JSON.parse(res.body);
+    expect(responseBody.name).toBe('Jane Doe');
+    expect(responseBody.skills).toEqual([
+      { category: 'Languages', skills: ['Python', 'Go'] },
+      { category: 'Cloud', skills: ['AWS', 'GCP'] },
+    ]);
+    await app.close();
+  });
+
+  it('returns 200 with a single uncategorized skill group for a flat resume', async () => {
+    const app = await buildApp();
+    const parsed = {
+      name: 'Jane Doe',
+      skills: [{ category: null, skills: ['Python', 'React', 'SQL'] }],
+      links: [],
+      projects: [],
+      experiences: [],
+      educations: [],
+    };
+    mockParser.parse.mockResolvedValue(parsed);
+
+    const { body, headers } = multipartBody('resume.pdf', '%PDF-1.4 fake', 'application/pdf');
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/profile/resume/parse',
+      headers: { ...headers, authorization: 'Bearer token' },
+      payload: body,
+    });
+
+    expect(res.statusCode).toBe(200);
+    const responseBody = JSON.parse(res.body);
+    expect(responseBody.skills).toEqual([{ category: null, skills: ['Python', 'React', 'SQL'] }]);
     await app.close();
   });
 

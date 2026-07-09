@@ -34,6 +34,11 @@ const llmSocialLinkSchema = z.object({
   social_media: z.string().optional(),
 });
 
+const llmSkillGroupSchema = z.object({
+  category: z.string().optional(),
+  skills: z.array(z.string()),
+});
+
 export const llmParsedResumeSchema = z.object({
   title: z.string().optional(),
   name: z.string().optional(),
@@ -42,7 +47,7 @@ export const llmParsedResumeSchema = z.object({
   location: z.string().optional(),
   summary: z.string().optional(),
   website: z.string().optional(),
-  skills: z.array(z.string()).optional(),
+  skills: z.array(llmSkillGroupSchema).optional(),
   links: z.array(llmSocialLinkSchema).optional(),
   projects: z.array(llmProjectSchema).optional(),
   experiences: z.array(llmExperienceSchema).optional(),
@@ -81,6 +86,11 @@ export const socialLinkSchema = z.object({
   social_media: z.string(),
 });
 
+export const skillGroupSchema = z.object({
+  category: z.string().nullable().default(null),
+  skills: z.array(z.string()).default([]),
+});
+
 export const parsedResumeSchema = z.object({
   title: z.string().nullable().default(null),
   name: z.string().nullable().default(null),
@@ -89,7 +99,7 @@ export const parsedResumeSchema = z.object({
   location: z.string().nullable().default(null),
   summary: z.string().nullable().default(null),
   website: z.string().nullable().default(null),
-  skills: z.array(z.string()).default([]),
+  skills: z.array(skillGroupSchema).default([]),
   links: z.array(socialLinkSchema).default([]),
   projects: z.array(projectSchema).default([]),
   experiences: z.array(experienceSchema).default([]),

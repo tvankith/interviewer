@@ -17,7 +17,10 @@ function normaliseLlmResult(
     location: raw.location ?? null,
     summary: raw.summary ?? null,
     website: raw.website ?? null,
-    skills: raw.skills ?? [],
+    skills: (raw.skills ?? []).map((g) => ({
+      category: g.category ?? null,
+      skills: g.skills ?? [],
+    })),
     links: (raw.links ?? []).map((l) => ({
       url: l.url ?? "",
       social_media: l.social_media ?? "",
@@ -69,7 +72,10 @@ Contact info (scan the full header and footer):
 - website: personal site URL (not LinkedIn/GitHub — those go in links)
 
 Skills (scan Skills, Technical Skills, Technologies, Tools, Competencies sections AND infer from job descriptions):
-- skills: every distinct technology, language, framework, tool, or skill — normalized (e.g. "React.js" → "React", "node" → "Node.js", "Postgres" → "PostgreSQL")
+- skills: a list of skill groups, each with:
+  - category: the sub-label the resume uses to group these skills under (e.g. "Languages", "Cloud", "Frameworks") — omit this field entirely for a group of skills that aren't sub-categorized in the resume
+  - skills: the distinct technologies, languages, frameworks, tools, or skills in that group — normalized (e.g. "React.js" → "React", "node" → "Node.js", "Postgres" → "PostgreSQL")
+  If the resume lists skills under sub-headers (e.g. "Languages: Python, Go" and "Cloud: AWS, GCP"), produce one group per sub-header. If the resume just lists skills flatly with no sub-categorization, produce a single group with no category.
 
 Links (scan header, footer, contact section):
 - links: social profiles with:

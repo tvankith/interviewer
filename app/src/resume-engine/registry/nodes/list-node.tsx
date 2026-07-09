@@ -28,6 +28,14 @@ function ListNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) 
   const items = node.binding ? resolveBinding(node.binding, scope.value) : undefined;
   const listAbsoluteBinding = node.binding ? toAbsoluteBinding(scope.absolutePath, node.binding) : undefined;
 
+  const prefixBound = props.prefixBinding ? resolveBinding(props.prefixBinding, scope.value) : undefined;
+  const prefixText = prefixBound != null && prefixBound !== "" ? `${String(prefixBound)}${props.prefixSuffix ?? ""}` : undefined;
+  const prefixLabel = prefixText ? (
+    <span style={{ fontSize: theme.sizes.label, color: theme.colors.text, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+      {prefixText}
+    </span>
+  ) : null;
+
   // Hover add/remove controls only apply when the template opts in
   // (`editable.addable`) and there's somewhere to write the result back to.
   const manage =
@@ -63,8 +71,11 @@ function ListNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) 
     // click-to-edit wrapper as any other editable node.
     if (node.editable?.editable) {
       return (
-        <div className={node.className} style={{ fontSize: theme.sizes.small, color: theme.colors.muted, fontStyle: "italic" }}>
-          {props.placeholder ?? "Click to add"}
+        <div className={cn("flex flex-wrap", node.className)} style={{ gap: theme.spacing.xs, alignItems: "baseline" }}>
+          {prefixLabel}
+          <span style={{ fontSize: theme.sizes.small, color: theme.colors.muted, fontStyle: "italic" }}>
+            {props.placeholder ?? "Click to add"}
+          </span>
         </div>
       );
     }
@@ -128,6 +139,8 @@ function ListNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) 
   if (display === "comma") {
     return (
       <span className={node.className} style={{ fontSize: theme.sizes.body, color: theme.colors.text }}>
+        {prefixLabel}
+        {prefixLabel ? " " : ""}
         {stringItems.join(", ")}
       </span>
     );
@@ -144,7 +157,8 @@ function ListNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) 
   }
 
   return (
-    <div className={cn("flex flex-wrap", node.className)} style={{ gap: theme.spacing.xs }}>
+    <div className={cn("flex flex-wrap", node.className)} style={{ gap: theme.spacing.xs, alignItems: "baseline" }}>
+      {prefixLabel}
       {stringItems.map((item, index) => {
         const chip = (
           <span

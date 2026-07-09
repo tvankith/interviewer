@@ -64,7 +64,13 @@ const parsedResumeResponseSchema = {
     location: nullableString,
     summary: nullableString,
     website: nullableString,
-    skills: stringArray,
+    skills: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { category: nullableString, skills: stringArray },
+      },
+    },
     links: {
       type: 'array',
       items: {

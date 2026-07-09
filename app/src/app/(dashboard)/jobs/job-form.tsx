@@ -28,7 +28,7 @@ import { API_URL } from "@/config";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type SkillCategory = {
+type SkillGroup = {
   category?: string;
   skills: string[];
 };
@@ -75,7 +75,7 @@ export default function JobForm({
       },
     });
 
-  const [skills, setSkills] = useState<SkillCategory[]>([]);
+  const [skills, setSkills] = useState<SkillGroup[]>([]);
   const [responsibilities, setResponsibilities] = useState<string[]>([]);
   const [requirements, setRequirements] = useState<string[]>([]);
   const [focusAreas, setFocusAreas] = useState<string[]>([]);

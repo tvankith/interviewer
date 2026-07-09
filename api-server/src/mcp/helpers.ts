@@ -1,4 +1,5 @@
 import type { candidate_profile } from '@prisma/client';
+import { toSkillGroups } from '../services/to-skill-groups';
 
 export function formatDescriptionAsHtml(description?: string | string[] | null): string | null {
   if (!description) return null;
@@ -33,7 +34,7 @@ export function candidateToDict(
     location: candidate.location,
     summary: candidate.summary,
     website: candidate.website,
-    skills: candidate.skills ?? [],
+    skills: toSkillGroups(candidate.skills),
     links: candidate.links ?? [],
     experiences: candidate.experiences ?? [],
     projects: candidate.projects ?? [],

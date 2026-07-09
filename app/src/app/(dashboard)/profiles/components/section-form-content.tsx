@@ -1,4 +1,4 @@
-import { ChipInput, EducationBuilder, ExperienceBuilder, Field, FieldContent, FieldLabel, Input, ProjectBuilder, ResumeDropzone, RichTextEditor, SocialLinksBuilder } from "@/design-system";
+import { EducationBuilder, ExperienceBuilder, Field, FieldContent, FieldLabel, Input, ProjectBuilder, ResumeDropzone, RichTextEditor, SkillsBuilder, SocialLinksBuilder } from "@/design-system";
 import { useProfileEditor } from "./profile-editor-context";
 import TemplateSelector from "./template-selector";
 import ThemeSelector from "./theme-selector";
@@ -82,10 +82,9 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
                 <Field>
                     <FieldLabel>Skills</FieldLabel>
                     <FieldContent>
-                        <ChipInput
+                        <SkillsBuilder
                             value={skills ?? []}
                             onChange={(val) => setValue("skills", val)}
-                            placeholder="Add a skill..."
                         />
                     </FieldContent>
                 </Field>

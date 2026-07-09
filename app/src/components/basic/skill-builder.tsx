@@ -1,16 +1,15 @@
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
-export type SkillCategory = {
+export type SkillGroup = {
   category?: string;
   skills: string[];
 };
 
 type SkillsBuilderProps = {
-  value: SkillCategory[];
-  onChange: (value: SkillCategory[]) => void;
+  value: SkillGroup[];
+  onChange: (value: SkillGroup[]) => void;
 };
 
 const SkillsBuilder = ({ value, onChange }: SkillsBuilderProps) => {
