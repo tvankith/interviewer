@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { registerNodeType, renderChildren, type NodeComponentProps } from "../node-registry";
 import type { SectionNodeProps } from "../../types/template";
 
-function SectionNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) {
+function SectionNode({ node, scope, resumeData, theme, mode, previousScope }: NodeComponentProps) {
   const props = (node.props as SectionNodeProps) || {};
   return (
     <div className={cn("resume-engine-avoid-break", node.className)} style={{ marginTop: theme.spacing.md }}>
@@ -22,7 +22,7 @@ function SectionNode({ node, scope, resumeData, theme, mode }: NodeComponentProp
         </div>
       )}
       <div className="flex flex-col" style={{ gap: theme.spacing.sm }}>
-        {renderChildren(node.children, scope, resumeData, theme, mode)}
+        {renderChildren(node.children, scope, resumeData, theme, mode, previousScope)}
       </div>
     </div>
   );

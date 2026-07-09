@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import TabsNav from "@/components/basic/tabs-nav";
 import { FORM_SECTIONS, DESIGN_SECTIONS, FLAT_SECTIONS, type SectionId } from "./profile-sections";
 import SectionFormContent from "./section-form-content";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ResumeCanvas from "@/resume-engine/render/resume-canvas";
 import type { ResumeData } from "@/resume-engine/types/resume-data";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
+import type { ResumeDiffHostValue } from "@/resume-engine/registry/diff-overlay";
 import { CandidateFormValues } from "../profile/compose/types";
 import type { UseFormSetValue } from "react-hook-form";
 import { Menu, Pen } from "lucide-react";
@@ -23,13 +24,22 @@ type Props = {
     themeDoc: ThemeDocument;
     setValue: UseFormSetValue<CandidateFormValues>;
     onPreviewClick?: () => void;
+    /** Set while a proposal is under canvas diff review; null/undefined otherwise. */
+    activeReview?: { proposedFields: Record<string, unknown>; diffHost: ResumeDiffHostValue } | null;
+    onFinishReview?: () => void;
 };
 
-export default function FormEditPanel({ activeSection, onSelectSection, values, templateDoc, themeDoc, setValue, onPreviewClick }: Props) {
+export default function FormEditPanel({ activeSection, onSelectSection, values, templateDoc, themeDoc, setValue, onPreviewClick, activeReview, onFinishReview }: Props) {
     const [tab, setTab] = useState("preview")
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
     const [downloadError, setDownloadError] = useState<string | null>(null)
+
+    // A proposal entering review should surface its diff immediately, even
+    // if the candidate was on the "edit" (form) tab.
+    useEffect(() => {
+        if (activeReview) setTab("preview");
+    }, [activeReview]);
 
     const handleDownloadClick = async () => {
         setIsMenuOpen(false);
@@ -135,13 +145,30 @@ export default function FormEditPanel({ activeSection, onSelectSection, values, 
                     </Card>}
                 {tab === "preview" && (
                     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
-                        <ResumeCanvas
-                            data={values as ResumeData}
-                            templateDoc={templateDoc}
-                            themeDoc={themeDoc}
-                            mode="interactive"
-                            onEdit={(binding, value) => setValue(binding as never, value as never, { shouldDirty: true })}
-                        />
+                        {activeReview ? (
+                            <>
+                                <div className="mb-3 flex items-center justify-between gap-3 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                                    <span>Reviewing proposed changes — accept or reject each one, then finish.</span>
+                                    <Button size="sm" onClick={onFinishReview}>Done reviewing</Button>
+                                </div>
+                                <ResumeCanvas
+                                    data={{ ...(values as ResumeData), ...activeReview.proposedFields } as ResumeData}
+                                    previousData={values as ResumeData}
+                                    templateDoc={templateDoc}
+                                    themeDoc={themeDoc}
+                                    mode="diff"
+                                    diffHost={activeReview.diffHost}
+                                />
+                            </>
+                        ) : (
+                            <ResumeCanvas
+                                data={values as ResumeData}
+                                templateDoc={templateDoc}
+                                themeDoc={themeDoc}
+                                mode="interactive"
+                                onEdit={(binding, value) => setValue(binding as never, value as never, { shouldDirty: true })}
+                            />
+                        )}
                     </div>
                 )}
             </div>

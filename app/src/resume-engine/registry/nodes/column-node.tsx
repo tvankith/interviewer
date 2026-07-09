@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { registerNodeType, renderChildren, type NodeComponentProps } from "../node-registry";
 import type { ColumnNodeProps } from "../../types/template";
 
-function ColumnNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) {
+function ColumnNode({ node, scope, resumeData, theme, mode, previousScope }: NodeComponentProps) {
   const props = (node.props as ColumnNodeProps) || {};
   return (
     <div
@@ -13,7 +13,7 @@ function ColumnNode({ node, scope, resumeData, theme, mode }: NodeComponentProps
         flex: props.width ? `0 0 ${props.width}` : 1,
       }}
     >
-      {renderChildren(node.children, scope, resumeData, theme, mode)}
+      {renderChildren(node.children, scope, resumeData, theme, mode, previousScope)}
     </div>
   );
 }

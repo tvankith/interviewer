@@ -2,8 +2,17 @@
 
 import "../registry/nodes";
 import { cn } from "@/lib/utils";
-import { RenderNode, setEditableWrapper, setListControls, type RenderMode, type BindingScope } from "../registry/node-registry";
+import {
+  RenderNode,
+  setEditableWrapper,
+  setListControls,
+  setDiffWrapper,
+  setDiffEntryWrapper,
+  type RenderMode,
+  type BindingScope,
+} from "../registry/node-registry";
 import { ResumeEditorHostProvider, EditableOverlay, resumeListControls } from "../registry/editable-overlay";
+import { ResumeDiffHostProvider, DiffOverlay, DiffEntryWrapper, type ResumeDiffHostValue } from "../registry/diff-overlay";
 import { googleFontsLinkHref } from "../theme/resolve-theme";
 import type { ResumeData } from "../types/resume-data";
 import type { TemplateDocument } from "../types/template";
@@ -13,6 +22,8 @@ import type { ThemeDocument } from "../types/theme";
 // setEditableWrapper for why the server-only static render path never does this.
 setEditableWrapper(EditableOverlay);
 setListControls(resumeListControls);
+setDiffWrapper(DiffOverlay);
+setDiffEntryWrapper(DiffEntryWrapper);
 
 export type ResumeCanvasProps = {
   data: ResumeData;
@@ -21,6 +32,10 @@ export type ResumeCanvasProps = {
   mode?: RenderMode;
   /** Called with the absolute binding path and new value when a click-to-edit save happens. Required for mode="interactive". */
   onEdit?: (absoluteBinding: string, value: unknown) => void;
+  /** Pre-proposal data to diff `data` against. Required for mode="diff". */
+  previousData?: ResumeData;
+  /** Accept/reject state for the pending proposal's review units. Required for mode="diff". */
+  diffHost?: ResumeDiffHostValue;
   className?: string;
 };
 
@@ -30,9 +45,12 @@ export default function ResumeCanvas({
   themeDoc,
   mode = "static",
   onEdit,
+  previousData,
+  diffHost,
   className,
 }: ResumeCanvasProps) {
   const rootScope: BindingScope = { value: data };
+  const previousRootScope: BindingScope | undefined = mode === "diff" && previousData ? { value: previousData } : undefined;
 
   // Same Google Fonts URL the PDF path (render-static-html.ts) links, so the
   // live canvas renders with the identical font file rather than whatever
@@ -47,8 +65,28 @@ export default function ResumeCanvas({
   );
 
   const content = (
-    <RenderNode node={templateDoc.root} scope={rootScope} resumeData={data} theme={themeDoc} mode={mode} />
+    <RenderNode
+      node={templateDoc.root}
+      scope={rootScope}
+      previousScope={previousRootScope}
+      resumeData={data}
+      theme={themeDoc}
+      mode={mode}
+    />
   );
+
+  if (mode === "diff") {
+    return (
+      <ResumeDiffHostProvider
+        value={diffHost ?? { getUnitStatus: () => "pending", setUnitStatus: () => {} }}
+      >
+        <div className={cn("w-full", className)}>
+          {fontLinks}
+          {content}
+        </div>
+      </ResumeDiffHostProvider>
+    );
+  }
 
   if (mode !== "interactive") {
     return (

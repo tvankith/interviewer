@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, field
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Literal
 
 import httpx
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -106,15 +106,33 @@ SYSTEM_PROMPT = (
     "themselves; it never saves anything by itself. For list fields "
     "(skills, projects, experiences, educations, links), first read the "
     "candidate's current profile, then return the COMPLETE array including "
-    "every unchanged entry — these fields are replaced wholesale when "
-    "saved, not merged item by item."
+    "every unchanged entry, IN THE SAME ORDER as the current profile — only "
+    "append new entries at the end or drop removed ones in place, never "
+    "reorder or insert an entry in the middle of the array. The candidate's "
+    "review UI matches your proposed array to their current one position by "
+    "position, so reordering makes it misattribute which entry changed.\n\n"
+    "The candidate reviews a proposal per field and per list entry, not "
+    "all-or-nothing — you may see some fields/entries reported back as "
+    "accepted and others as rejected from the same proposal. Rejected "
+    "fields/entries were left at their previous value; only accepted ones "
+    "were actually saved."
 )
+
+
+@dataclass
+class ProposalUnitDecision:
+    """One field's or list entry's independent accept/reject decision — see
+    app/src/resume-engine/diff/review-unit.ts for the matching `unit` id
+    scheme (a field name, or `field.index` for a list entry)."""
+
+    unit: str
+    status: Literal["accepted", "rejected"]
 
 
 @dataclass
 class ProposalOutcome:
     proposal_id: str
-    approved: bool
+    decisions: list[ProposalUnitDecision]
 
 
 @dataclass
@@ -307,14 +325,20 @@ async def invoke_agent(
     # proposal_outcome is reported as a synthetic, clearly-bracketed fact
     # rather than freeform text — it's a deterministic status update, not
     # something the model should interpret as the candidate's own words.
+    # Review is per-unit (see design.md), so a single proposal can come back
+    # with a mix of accepted and rejected fields/entries rather than one
+    # whole-proposal verdict.
     if proposal_outcome is not None:
-        status = (
-            "approved — the change has already been saved to the candidate's profile"
-            if proposal_outcome.approved
-            else "rejected — no change was made"
-        )
+        accepted = [d.unit for d in proposal_outcome.decisions if d.status == "accepted"]
+        rejected = [d.unit for d in proposal_outcome.decisions if d.status == "rejected"]
+        parts = []
+        if accepted:
+            parts.append(f"accepted (saved): {', '.join(accepted)}")
+        if rejected:
+            parts.append(f"rejected (left unchanged): {', '.join(rejected)}")
+        summary = "; ".join(parts) if parts else "nothing accepted, no changes were made"
         input_message = HumanMessage(
-            content=f"[proposal {proposal_outcome.proposal_id} {status}]"
+            content=f"[proposal {proposal_outcome.proposal_id} reviewed — {summary}]"
         )
     else:
         input_message = HumanMessage(content=user_message)

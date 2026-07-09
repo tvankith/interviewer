@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { registerNodeType, renderChildren, type NodeComponentProps } from "../node-registry";
 import type { RowNodeProps } from "../../types/template";
 
-function RowNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) {
+function RowNode({ node, scope, resumeData, theme, mode, previousScope }: NodeComponentProps) {
   const props = (node.props as RowNodeProps) || {};
   return (
     <div
@@ -13,7 +13,7 @@ function RowNode({ node, scope, resumeData, theme, mode }: NodeComponentProps) {
         alignItems: props.align,
       }}
     >
-      {renderChildren(node.children, scope, resumeData, theme, mode)}
+      {renderChildren(node.children, scope, resumeData, theme, mode, previousScope)}
     </div>
   );
 }

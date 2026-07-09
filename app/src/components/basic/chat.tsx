@@ -32,10 +32,19 @@ export type ChatProposalFieldDiff = {
   after: unknown;
 };
 
+/**
+ * "pending": not yet opened for review. "reviewing": the candidate has the
+ * canvas diff open and is setting per-field/per-entry accept/reject
+ * decisions there (see resume-engine/diff/use-proposal-review.ts) — this
+ * card no longer does its own approve/reject, it only launches that review.
+ * "submitting": the batched PATCH from "done reviewing" is in flight.
+ * "done": the reconciled result has been saved (whether or not any
+ * individual unit was actually accepted).
+ */
 export type ChatProposal = {
   id: string;
   fields: ChatProposalFieldDiff[];
-  status: "pending" | "approving" | "rejecting" | "approved" | "rejected";
+  status: "pending" | "reviewing" | "submitting" | "done";
 };
 
 export type ChatMessage = {
@@ -60,8 +69,8 @@ type ChatProps = {
   className?: string;
   modes?: ChatMode[];
   defaultMode?: string;
-  onApproveProposal?: (messageId: string, proposalId: string) => void;
-  onRejectProposal?: (messageId: string, proposalId: string) => void;
+  /** Opens (or refocuses) the canvas diff review for this proposal. */
+  onReviewProposal?: (messageId: string, proposalId: string) => void;
 };
 
 function formatFieldValue(value: unknown): string {
@@ -72,12 +81,10 @@ function formatFieldValue(value: unknown): string {
 
 function ProposalCard({
   proposal,
-  onApprove,
-  onReject,
+  onReview,
 }: {
   proposal: ChatProposal;
-  onApprove: () => void;
-  onReject: () => void;
+  onReview: () => void;
 }) {
   return (
     <div className="mt-2 rounded-md border bg-muted/40 p-3 text-sm">
@@ -97,30 +104,19 @@ function ProposalCard({
         ))}
       </div>
 
-      {proposal.status === "pending" || proposal.status === "approving" || proposal.status === "rejecting" ? (
-        <div className="mt-3 flex gap-2">
-          <button
-            type="button"
-            onClick={onApprove}
-            disabled={proposal.status !== "pending"}
-            className="rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          >
-            {proposal.status === "approving" ? "Saving…" : "Approve"}
-          </button>
-          <button
-            type="button"
-            onClick={onReject}
-            disabled={proposal.status !== "pending"}
-            className="rounded border px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
-          >
-            {proposal.status === "rejecting" ? "Declining…" : "Reject"}
-          </button>
-        </div>
-      ) : (
-        <div className="mt-3 text-xs font-medium text-muted-foreground">
-          {proposal.status === "approved" ? "Approved and saved" : "Rejected"}
-        </div>
-      )}
+      <div className="mt-3">
+        <button
+          type="button"
+          onClick={onReview}
+          disabled={proposal.status === "submitting" || proposal.status === "done"}
+          className="rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+        >
+          {proposal.status === "pending" && "Review in resume"}
+          {proposal.status === "reviewing" && "Reviewing…"}
+          {proposal.status === "submitting" && "Saving…"}
+          {proposal.status === "done" && "Reviewed"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -133,8 +129,7 @@ export function Chat({
   className,
   modes = [],
   defaultMode,
-  onApproveProposal,
-  onRejectProposal,
+  onReviewProposal,
 }: ChatProps) {
   const [input, setInput] = useState("");
   const [selectedMode, setSelectedMode] = useState<string>(
@@ -184,11 +179,8 @@ export function Chat({
                       <ProposalCard
                         key={proposal.id}
                         proposal={proposal}
-                        onApprove={() =>
-                          onApproveProposal?.(message.id ?? "", proposal.id)
-                        }
-                        onReject={() =>
-                          onRejectProposal?.(message.id ?? "", proposal.id)
+                        onReview={() =>
+                          onReviewProposal?.(message.id ?? "", proposal.id)
                         }
                       />
                     ))}

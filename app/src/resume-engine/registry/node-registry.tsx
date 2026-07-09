@@ -4,7 +4,7 @@ import type { ThemeDocument } from "../types/theme";
 import type { ResumeData } from "../types/resume-data";
 import { resolveBinding, toAbsoluteBinding } from "../binding/resolve-binding";
 
-export type RenderMode = "interactive" | "static";
+export type RenderMode = "interactive" | "static" | "diff";
 
 /**
  * The data a node's binding resolves against, plus (inside a List repeater)
@@ -23,6 +23,14 @@ export type NodeComponentProps = {
   resumeData: ResumeData;
   theme: ThemeDocument;
   mode: RenderMode;
+  /**
+   * Only set in mode="diff": the same shape as `scope`, but resolved against
+   * the pre-proposal data instead of the (possibly proposed) current data.
+   * Undefined for a wholly-added repeater entry, which has no "before" to
+   * diff against. Containers pass this through renderChildren unchanged,
+   * exactly as they already do for `scope`.
+   */
+  previousScope?: BindingScope;
 };
 
 export type NodeComponent = ComponentType<NodeComponentProps>;
@@ -104,6 +112,61 @@ export function getListControls(): ListControls | null {
 }
 
 /**
+ * Diff-mode equivalent of `EditableWrapperComponent` for scalar (Text/
+ * RichText) bindings — given the old and new value at one binding, renders
+ * whatever diff decoration (or accept/reject control) diff-review needs.
+ * Only invoked by RenderNode for Text/RichText; List manages its own
+ * diff rendering directly (see DiffEntryWrapperComponent below) since a
+ * list's "value" is an array that needs entry correspondence, not a scalar
+ * before/after comparison.
+ */
+export type DiffWrapperProps = {
+  node: TemplateNode;
+  /** Dot-path this diff is for — the review-unit id for a root-level scalar field. */
+  absoluteBinding: string;
+  oldValue: unknown;
+  newValue: unknown;
+  /** False for a wholly-added repeater entry's fields, which have no prior value to compare against. */
+  hasPrevious: boolean;
+  /** True when this field isn't nested inside a repeater entry — only then does it get its own accept/reject control (a field inside a list entry is reviewed as part of that entry's single unit). */
+  isTopLevelUnit: boolean;
+  hrefOldValue?: unknown;
+  hrefNewValue?: unknown;
+  bindingEndOldValue?: unknown;
+  bindingEndNewValue?: unknown;
+  children: ReactNode;
+};
+
+export type DiffWrapperComponent = ComponentType<DiffWrapperProps>;
+
+// Set only by the client entry point, same rationale as `editableWrapper`.
+let diffWrapper: DiffWrapperComponent | null = null;
+
+export function setDiffWrapper(component: DiffWrapperComponent): void {
+  diffWrapper = component;
+}
+
+/** One repeater entry's diff decoration + accept/reject control, injected the same way ListControls is. */
+export type DiffEntryWrapperProps = {
+  listAbsoluteBinding: string;
+  index: number;
+  kind: "added" | "removed" | "modified";
+  children: ReactNode;
+};
+
+export type DiffEntryWrapperComponent = ComponentType<DiffEntryWrapperProps>;
+
+let diffEntryWrapper: DiffEntryWrapperComponent | null = null;
+
+export function setDiffEntryWrapper(component: DiffEntryWrapperComponent): void {
+  diffEntryWrapper = component;
+}
+
+export function getDiffEntryWrapper(): DiffEntryWrapperComponent | null {
+  return diffEntryWrapper;
+}
+
+/**
  * Single choke point for rendering a template node: resolves its binding,
  * renders the registered component for its type, and wraps the result in
  * click-to-edit when appropriate. Adding a new NodeType later only requires
@@ -151,6 +214,47 @@ export function RenderNode(props: NodeComponentProps) {
     );
   }
 
+  // List manages its own diff rendering (entry correspondence) directly —
+  // only Text/RichText scalar bindings go through the generic DiffWrapper.
+  if (
+    props.mode === "diff" &&
+    props.node.binding &&
+    (props.node.type === "Text" || props.node.type === "RichText") &&
+    diffWrapper
+  ) {
+    const Wrapper = diffWrapper;
+    const newValue = resolveBinding(props.node.binding, props.scope.value);
+    const oldValue = props.previousScope ? resolveBinding(props.node.binding, props.previousScope.value) : undefined;
+    const hasPrevious = props.previousScope !== undefined;
+    const absoluteBinding = toAbsoluteBinding(props.scope.absolutePath, props.node.binding);
+    const isTopLevelUnit = props.scope.absolutePath === undefined;
+
+    const hrefBinding = props.node.type === "Text" ? (props.node.props as TextNodeProps | undefined)?.hrefBinding : undefined;
+    const hrefNewValue = hrefBinding ? resolveBinding(hrefBinding, props.scope.value) : undefined;
+    const hrefOldValue = hrefBinding && props.previousScope ? resolveBinding(hrefBinding, props.previousScope.value) : undefined;
+
+    const bindingEnd = props.node.type === "Text" ? (props.node.props as TextNodeProps | undefined)?.bindingEnd : undefined;
+    const bindingEndNewValue = bindingEnd ? resolveBinding(bindingEnd, props.scope.value) : undefined;
+    const bindingEndOldValue = bindingEnd && props.previousScope ? resolveBinding(bindingEnd, props.previousScope.value) : undefined;
+
+    return (
+      <Wrapper
+        node={props.node}
+        absoluteBinding={absoluteBinding}
+        oldValue={oldValue}
+        newValue={newValue}
+        hasPrevious={hasPrevious}
+        isTopLevelUnit={isTopLevelUnit}
+        hrefOldValue={hrefOldValue}
+        hrefNewValue={hrefNewValue}
+        bindingEndOldValue={bindingEndOldValue}
+        bindingEndNewValue={bindingEndNewValue}
+      >
+        {rendered}
+      </Wrapper>
+    );
+  }
+
   return rendered;
 }
 
@@ -160,9 +264,18 @@ export function renderChildren(
   scope: BindingScope,
   resumeData: ResumeData,
   theme: ThemeDocument,
-  mode: RenderMode
+  mode: RenderMode,
+  previousScope?: BindingScope
 ) {
   return (children ?? []).map((child) => (
-    <RenderNode key={child.id} node={child} scope={scope} resumeData={resumeData} theme={theme} mode={mode} />
+    <RenderNode
+      key={child.id}
+      node={child}
+      scope={scope}
+      resumeData={resumeData}
+      theme={theme}
+      mode={mode}
+      previousScope={previousScope}
+    />
   ));
 }

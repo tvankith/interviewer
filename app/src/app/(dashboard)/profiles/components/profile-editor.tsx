@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import FormEditPanel from "./form-edit-panel";
 import type { SectionId } from "./profile-sections";
 import { plainTextToLexicalJson } from "@/resume-engine/lexical-json/plain-text-to-lexical-json";
+import { useProposalReview } from "@/resume-engine/diff/use-proposal-review";
+import { reconcileProposal } from "@/resume-engine/diff/reconcile-proposal";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
 import type { ResumeData } from "@/resume-engine/types/resume-data";
@@ -54,6 +56,8 @@ export default function ProfileEditor({
     const [isChattingLoading, setIsChattingLoading] = useState(false);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [importStatus, setImportStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+    const [activeReview, setActiveReview] = useState<{ messageId: string; proposalId: string; proposedFields: Record<string, unknown> } | null>(null);
+    const review = useProposalReview();
     const sessionIdRef = useRef<string | null>(null);
     const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const queryClient = useQueryClient();
@@ -263,8 +267,10 @@ export default function ProfileEditor({
         }
     }
 
-    const handleApproveProposal = async (messageId: string, proposalId: string) => {
-        if (!profileId) return;
+    // Opens (or refocuses) the canvas diff review for one proposal — actual
+    // accept/reject now happens per-field/per-entry on the canvas itself
+    // (see resume-engine/registry/diff-overlay.tsx), not here.
+    const handleReviewProposal = (messageId: string, proposalId: string) => {
         const proposal = chatMessages
             .find((m) => m.id === messageId)
             ?.proposals?.find((p) => p.id === proposalId);
@@ -274,51 +280,52 @@ export default function ProfileEditor({
             proposal.fields.map((f) => [f.field, f.after])
         );
 
-        // "approving" only disables the buttons — the visible status doesn't
-        // flip to "approved" until the write has actually succeeded below.
-        setProposalStatus(messageId, proposalId, "approving");
-
-        try {
-            // Same write path (and same candidate-owned auth) manual edits
-            // already use — ai-server never performs this write itself.
-            await updateProfile(profileId, proposedFields);
-            Object.entries(proposedFields).forEach(([field, value]) => {
-                setValue(field as keyof CandidateFormValues, normalizeFieldValue(field, value) as never);
-            });
-            // The write is the source of truth for "approved" — flip the UI
-            // here, independent of whether informing the agent below succeeds.
-            setProposalStatus(messageId, proposalId, "approved");
-
-            const response = await sendAgentMessage({
-                candidate_id: profileId,
-                session_id: sessionIdRef.current || undefined,
-                proposal_outcome: { proposal_id: proposalId, approved: true },
-            });
-            applyAgentResponse(response);
-        } catch (error) {
-            console.error("Failed to save approved proposal:", error);
-            // The write didn't actually happen — don't leave it marked approved.
-            setProposalStatus(messageId, proposalId, "pending");
-            showStatus("error", "Failed to save the approved change. Please try again.");
+        if (activeReview?.proposalId !== proposalId) {
+            review.reset();
         }
+        setActiveReview({ messageId, proposalId, proposedFields });
+        setProposalStatus(messageId, proposalId, "reviewing");
     };
 
-    const handleRejectProposal = async (messageId: string, proposalId: string) => {
-        if (!profileId) return;
-        setProposalStatus(messageId, proposalId, "rejecting");
+    // The single reconciliation + write, fired once when the candidate is
+    // done setting accept/reject decisions across the whole proposal — see
+    // resume-engine/diff/reconcile-proposal.ts and design.md Decision 5.
+    const handleFinishReview = async () => {
+        if (!profileId || !activeReview) return;
+        const { messageId, proposalId, proposedFields } = activeReview;
+        const currentValues = watch() as Record<string, unknown>;
+        const { patch, outcome } = reconcileProposal(proposedFields, currentValues, review.decisions);
+
+        setProposalStatus(messageId, proposalId, "submitting");
 
         try {
+            if (Object.keys(patch).length > 0) {
+                // Same write path (and same candidate-owned auth) manual edits
+                // already use — ai-server never performs this write itself.
+                await updateProfile(profileId, patch);
+                Object.entries(patch).forEach(([field, value]) => {
+                    setValue(field as keyof CandidateFormValues, normalizeFieldValue(field, value) as never);
+                });
+            }
+            // The write (or the decision that nothing needed writing) is the
+            // source of truth for "done" — flip the UI here, independent of
+            // whether informing the agent below succeeds.
+            setProposalStatus(messageId, proposalId, "done");
+            setActiveReview(null);
+            review.reset();
+
             const response = await sendAgentMessage({
                 candidate_id: profileId,
                 session_id: sessionIdRef.current || undefined,
-                proposal_outcome: { proposal_id: proposalId, approved: false },
+                proposal_outcome: { proposal_id: proposalId, decisions: outcome },
             });
-            setProposalStatus(messageId, proposalId, "rejected");
             applyAgentResponse(response);
         } catch (error) {
-            console.error("Failed to report rejected proposal:", error);
-            setProposalStatus(messageId, proposalId, "pending");
-            showStatus("error", "Failed to record the rejection. Please try again.");
+            console.error("Failed to save reviewed proposal:", error);
+            // The write didn't actually happen — go back to reviewing rather
+            // than silently discarding the candidate's decisions.
+            setProposalStatus(messageId, proposalId, "reviewing");
+            showStatus("error", "Failed to save your reviewed changes. Please try again.");
         }
     };
 
@@ -399,6 +406,8 @@ export default function ProfileEditor({
                             themeDoc={themeDoc}
                             onPreviewClick={onPreviewClick}
                             setValue={setValue}
+                            activeReview={activeReview ? { proposedFields: activeReview.proposedFields, diffHost: review.diffHost } : null}
+                            onFinishReview={handleFinishReview}
                             />
                     </div>
                 )}
@@ -429,8 +438,7 @@ export default function ProfileEditor({
                                 messages={chatMessages}
                                 isStreaming={isChattingLoading || isChatHistoryLoading}
                                 onSend={handleSendMessage}
-                                onApproveProposal={handleApproveProposal}
-                                onRejectProposal={handleRejectProposal}
+                                onReviewProposal={handleReviewProposal}
                                 placeholder="Ask about your profile..."
                                 className="h-full p-2"
                             />

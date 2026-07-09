@@ -1,11 +1,13 @@
 import logging
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 
 from agent.graph import (
     ProposalOutcome,
+    ProposalUnitDecision,
     get_thread_messages,
     invoke_agent,
     notify_thread_created,
@@ -16,9 +18,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+class ProposalUnitDecisionRequest(BaseModel):
+    unit: str
+    status: Literal["accepted", "rejected"]
+
+
 class ProposalOutcomeRequest(BaseModel):
     proposal_id: str
-    approved: bool
+    decisions: list[ProposalUnitDecisionRequest]
 
 
 class AgentRequest(BaseModel):
@@ -65,7 +72,10 @@ async def agent(body: AgentRequest, background_tasks: BackgroundTasks) -> AgentR
             proposal_outcome=(
                 ProposalOutcome(
                     proposal_id=body.proposal_outcome.proposal_id,
-                    approved=body.proposal_outcome.approved,
+                    decisions=[
+                        ProposalUnitDecision(unit=d.unit, status=d.status)
+                        for d in body.proposal_outcome.decisions
+                    ],
                 )
                 if body.proposal_outcome
                 else None

@@ -22,9 +22,15 @@ export async function sendChat(
 }
 
 // Agent endpoint for resume improvements
+export type ReviewUnitDecision = {
+  unit: string;
+  status: "accepted" | "rejected";
+};
+
+/** Per-unit outcome for a proposal reviewed in the canvas diff (see resume-engine/diff/reconcile-proposal.ts) — replaces the old whole-proposal `approved` boolean now that review is granular. */
 export type ProposalOutcome = {
   proposal_id: string;
-  approved: boolean;
+  decisions: ReviewUnitDecision[];
 };
 
 export type AgentRequest = {
