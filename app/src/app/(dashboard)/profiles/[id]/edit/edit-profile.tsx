@@ -52,7 +52,7 @@ export default function EditProfile({
                 const payload: any = {};
 
                 // Only include fields that actually changed
-                const fieldsToCheck = ['name', 'email', 'phone', 'location', 'summary', 'website', 'skills', 'projects', 'experiences', 'educations', 'links', 'template_id', 'theme_id'];
+                const fieldsToCheck = ['title', 'name', 'email', 'phone', 'location', 'summary', 'website', 'skills', 'projects', 'experiences', 'educations', 'links', 'template_id', 'theme_id'];
 
                 fieldsToCheck.forEach((field) => {
                     const newValue = field === 'projects'
