@@ -12,9 +12,8 @@ import type { ThemeDocument } from "@/resume-engine/types/theme";
 import type { ResumeDiffHostValue } from "@/resume-engine/registry/diff-overlay";
 import { CandidateFormValues } from "../profile/compose/types";
 import type { UseFormSetValue } from "react-hook-form";
-import { Menu, Pen } from "lucide-react";
+import { Pen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { renderResumeHtmlApi, generateLexicalPdfApi } from "@/apis/resume-pdf";
 
 type Props = {
     activeSection: SectionId;
@@ -23,17 +22,13 @@ type Props = {
     templateDoc: TemplateDocument;
     themeDoc: ThemeDocument;
     setValue: UseFormSetValue<CandidateFormValues>;
-    onPreviewClick?: () => void;
     /** Set while a proposal is under canvas diff review; null/undefined otherwise. */
     activeReview?: { proposedFields: Record<string, unknown>; diffHost: ResumeDiffHostValue } | null;
     onFinishReview?: () => void;
 };
 
-export default function FormEditPanel({ activeSection, onSelectSection, values, templateDoc, themeDoc, setValue, onPreviewClick, activeReview, onFinishReview }: Props) {
+export default function FormEditPanel({ activeSection, onSelectSection, values, templateDoc, themeDoc, setValue, activeReview, onFinishReview }: Props) {
     const [tab, setTab] = useState("preview")
-    const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [isDownloading, setIsDownloading] = useState(false)
-    const [downloadError, setDownloadError] = useState<string | null>(null)
 
     // A proposal entering review should surface its diff immediately, even
     // if the candidate was on the "edit" (form) tab.
@@ -41,68 +36,10 @@ export default function FormEditPanel({ activeSection, onSelectSection, values, 
         if (activeReview) setTab("preview");
     }, [activeReview]);
 
-    const handleDownloadClick = async () => {
-        setIsMenuOpen(false);
-        setIsDownloading(true);
-        setDownloadError(null);
-        try {
-            const html = await renderResumeHtmlApi({ templateDoc, themeDoc, data: values as ResumeData });
-            const url = await generateLexicalPdfApi(html);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = "resume.pdf";
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch {
-            setDownloadError("Failed to generate PDF");
-        } finally {
-            setIsDownloading(false);
-        }
-    };
-
     return (
         <div className="flex h-full w-full overflow-auto">
             {/* Left Sidebar */}
             <div className="flex flex-col gap-2 py-2 px-2 border-r">
-                <div className="relative">
-                    <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        onBlur={() => setTimeout(() => setIsMenuOpen(false), 200)}
-                        title="Menu"
-                    >
-                        <Menu className="w-4 h-4" />
-                    </Button>
-                    {isMenuOpen && (
-                        <div className="absolute left-full top-0 ml-2 bg-white border border-gray-200 rounded-md shadow-md z-10 w-40">
-                            <button
-                                onClick={() => {
-                                    onPreviewClick?.();
-                                    setIsMenuOpen(false);
-                                }}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                            >
-                                Preview PDF
-                            </button>
-                            <button
-                                onClick={handleDownloadClick}
-                                disabled={isDownloading}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isDownloading ? "Downloading..." : "Download PDF"}
-                            </button>
-                        </div>
-                    )}
-                    {downloadError && (
-                        <div className="absolute left-full top-full mt-1 ml-2 w-48 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1 z-10">
-                            {downloadError}
-                        </div>
-                    )}
-                </div>
                 <Button
                     size="icon"
                     variant="outline"

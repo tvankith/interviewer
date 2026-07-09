@@ -6,7 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import { debounce } from "lodash";
 import { updateProfile } from "@/apis/profile";
 import ProfileEditor from "../../components/profile-editor";
-import { useRouter } from "next/navigation";
 import type { CandidateFormValues } from "../../profile/compose/types";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
@@ -24,7 +23,6 @@ export default function EditProfile({
     templateDoc,
     themeDoc,
 }: Props) {
-    const router = useRouter()
     const methods = useForm<CandidateFormValues>({ defaultValues: initialData });
 
     const lastSavedDataRef = useRef<CandidateFormValues>(initialData);
@@ -101,11 +99,6 @@ export default function EditProfile({
                     templateDoc={templateDoc}
                     themeDoc={themeDoc}
                     profileId={id}
-                    onPreviewClick={()=>{
-                        router.push(
-                            `/profiles/${id}/edit/preview`
-                        )
-                    }}
                 />
             </div>
         </FormProvider>

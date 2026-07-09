@@ -35,7 +35,6 @@ type Props = {
     onSubmit?: (payload: CandidatePayload) => void;
     isDataLoading?: boolean;
     isDataSaving?: boolean;
-    onPreviewClick?: () => void;
     profileId?: string;
 };
 
@@ -47,7 +46,6 @@ export default function ProfileEditor({
     templateDoc,
     themeDoc,
     isDataLoading,
-    onPreviewClick,
     profileId
 }: Props) {
     const [activeSection, setActiveSection] = useState<SectionId>("basic");
@@ -404,7 +402,6 @@ export default function ProfileEditor({
                             values={values}
                             templateDoc={templateDoc}
                             themeDoc={themeDoc}
-                            onPreviewClick={onPreviewClick}
                             setValue={setValue}
                             activeReview={activeReview ? { proposedFields: activeReview.proposedFields, diffHost: review.diffHost } : null}
                             onFinishReview={handleFinishReview}

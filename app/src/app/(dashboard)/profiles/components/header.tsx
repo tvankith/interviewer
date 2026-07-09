@@ -1,9 +1,11 @@
 import { UseMutationResult } from "@tanstack/react-query";
-import { FileText, Upload, Download, Pen, CheckCircle, XCircle } from "lucide-react"
+import { FileText, Upload, Download, Pen, CheckCircle, XCircle, LogOut } from "lucide-react"
 import { Dispatch, SetStateAction, useState } from "react"
 import type { ResumeData } from "@/resume-engine/types/resume-data";
 import type { TemplateDocument } from "@/resume-engine/types/template";
 import type { ThemeDocument } from "@/resume-engine/types/theme";
+import { useAuth } from "@/hooks/use-auth";
+import { renderResumeHtmlApi, generateLexicalPdfApi } from "@/apis/resume-pdf";
 
 const Header = (props: {
     mode: "form" | "spec";
@@ -17,27 +19,27 @@ const Header = (props: {
     const { mode, setMode, parseResume, importStatus, templateDoc, themeDoc, values } = props
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadError, setDownloadError] = useState<string | null>(null);
+    const { signOut } = useAuth({ enabled: true });
 
     const handleDownloadClick = async () => {
-        // setIsDownloading(true);
-        // setDownloadError(null);
-        // try {
-        //     const response = await generateResumePdf({ templateDoc, themeDoc, data: values });
-        //     if (!response.success || !response.data) {
-        //         setDownloadError(response.message || "Failed to generate PDF");
-        //         return;
-        //     }
-        //     const link = document.createElement("a");
-        //     link.href = `/api/pdf/download?url=${encodeURIComponent(response.data)}&filename=resume.pdf`;
-        //     link.download = "resume.pdf";
-        //     document.body.appendChild(link);
-        //     link.click();
-        //     document.body.removeChild(link);
-        // } catch {
-        //     setDownloadError("Failed to generate PDF");
-        // } finally {
-        //     setIsDownloading(false);
-        // }
+        setIsDownloading(true);
+        setDownloadError(null);
+        try {
+            const html = await renderResumeHtmlApi({ templateDoc, themeDoc, data: values });
+            const url = await generateLexicalPdfApi(html);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "resume.pdf";
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch {
+            setDownloadError("Failed to generate PDF");
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -105,6 +107,13 @@ const Header = (props: {
                         </div>
                     )}
                 </div>
+                <button
+                    onClick={signOut}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-md hover:bg-muted transition-colors"
+                >
+                    <LogOut size={16} />
+                    Sign out
+                </button>
             </div>
         </div>
     )

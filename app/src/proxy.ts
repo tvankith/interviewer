@@ -4,11 +4,7 @@ const RouteConfiguration = {
   dashboardRoutes: [
     "/resume-generator",
     "/interviews",
-    "/jobs",
     "/profiles",
-    "/question-bank",
-    "/session",
-    "/dashboard"
   ],
 
   publicRoutes: [
@@ -24,6 +20,8 @@ export default function middleware(req: NextRequest) {
 
   const pathname =
     req.nextUrl.pathname;
+
+  console.log("[proxy debug]", pathname, "token:", !!token);
 
   const {
     dashboardRoutes,
@@ -56,7 +54,7 @@ export default function middleware(req: NextRequest) {
   // Redirect authenticated users away from public routes
   if (token && isPublicRoute) {
     return NextResponse.redirect(
-      new URL("/dashboard", req.url)
+      new URL("/profiles", req.url)
     );
   }
 
@@ -64,13 +62,5 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/resume-generator(.*)",
-    "/interviews(.*)",
-    "/jobs(.*)",
-    "/profiles(.*)",
-    "/question-bank(.*)",
-    "/session(.*)",
-    "/dashboard(.*)",
-  ],
+  matcher: ["/:path*"],
 };
