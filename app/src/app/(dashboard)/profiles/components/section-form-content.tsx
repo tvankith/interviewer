@@ -28,6 +28,12 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
                             <Input {...register("name")} placeholder="Your full name" />
                         </FieldContent>
                     </Field>
+                    <Field>
+                        <FieldLabel>Title</FieldLabel>
+                        <FieldContent>
+                            <Input {...register("title")} placeholder="e.g. Senior Software Engineer" />
+                        </FieldContent>
+                    </Field>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                         <Field>
                             <FieldLabel>Email</FieldLabel>

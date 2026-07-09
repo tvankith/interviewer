@@ -80,6 +80,7 @@ export default function ProfileEditor({
     // same convention as the interview agent's proposals), so descriptions
     // are converted to Lexical JSON the same way buildProposalDiff does.
     const fillForm = (data: any) => {
+        if (data.title) setValue("title", data.title);
         if (data.name) setValue("name", data.name);
         if (data.email) setValue("email", data.email);
         if (data.phone) setValue("phone", data.phone);

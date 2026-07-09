@@ -40,6 +40,9 @@ export type EditableWrapperProps = {
   /** Set when a Text node has `hrefBinding` — lets the editor offer a second field for the link target. */
   hrefValue?: unknown;
   hrefAbsoluteBinding?: string;
+  /** Set when a Text node has `bindingEnd` (e.g. start/end date) — lets the editor offer a second field for the end value. */
+  bindingEndValue?: unknown;
+  bindingEndAbsoluteBinding?: string;
   children: ReactNode;
 };
 
@@ -129,6 +132,10 @@ export function RenderNode(props: NodeComponentProps) {
     const hrefValue = hrefBinding ? resolveBinding(hrefBinding, props.scope.value) : undefined;
     const hrefAbsoluteBinding = hrefBinding ? toAbsoluteBinding(props.scope.absolutePath, hrefBinding) : undefined;
 
+    const bindingEnd = props.node.type === "Text" ? (props.node.props as TextNodeProps | undefined)?.bindingEnd : undefined;
+    const bindingEndValue = bindingEnd ? resolveBinding(bindingEnd, props.scope.value) : undefined;
+    const bindingEndAbsoluteBinding = bindingEnd ? toAbsoluteBinding(props.scope.absolutePath, bindingEnd) : undefined;
+
     return (
       <Wrapper
         node={props.node}
@@ -136,6 +143,8 @@ export function RenderNode(props: NodeComponentProps) {
         absoluteBinding={absoluteBinding}
         hrefValue={hrefValue}
         hrefAbsoluteBinding={hrefAbsoluteBinding}
+        bindingEndValue={bindingEndValue}
+        bindingEndAbsoluteBinding={bindingEndAbsoluteBinding}
       >
         {rendered}
       </Wrapper>

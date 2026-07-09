@@ -18,6 +18,7 @@ export const mapProfileToForm = (data: Profile): CandidateFormValues => ({
     description: normalizeRichText(ed.description),
   })),
   links: data.links || [],
+  title: data.title,
   name: data.name,
   email: data.email,
   phone: data.phone,

@@ -7,17 +7,18 @@ import { z } from "zod";
 
 const llmProjectSchema = z.object({
   name: z.string().optional(),
-  description: z.string().optional(),
+  description: z.array(z.string()).default([]),
   tech_stack: z.array(z.string()).optional(),
 });
 
 const llmExperienceSchema = z.object({
   company: z.string().optional(),
   role: z.string().optional(),
+  location: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-  description: z.string().optional(),
-  tech_stack: z.array(z.string()).optional(),
+  description: z.array(z.string()).default([]),
+  tech_stack: z.array(z.string()).optional()
 });
 
 const llmEducationSchema = z.object({
@@ -25,7 +26,7 @@ const llmEducationSchema = z.object({
   course: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-  description: z.string().optional(),
+  description: z.array(z.string()).default([]),
 });
 
 const llmSocialLinkSchema = z.object({
@@ -34,6 +35,7 @@ const llmSocialLinkSchema = z.object({
 });
 
 export const llmParsedResumeSchema = z.object({
+  title: z.string().optional(),
   name: z.string().optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
@@ -52,16 +54,17 @@ export const llmParsedResumeSchema = z.object({
 
 export const projectSchema = z.object({
   name: z.string().nullable().default(null),
-  description: z.string().nullable().default(null),
+  description: z.array(z.string()).default([]),
   tech_stack: z.array(z.string()).default([]),
 });
 
 export const experienceSchema = z.object({
   company: z.string().nullable().default(null),
   role: z.string().nullable().default(null),
+  location: z.string().nullable().default(null),
   start_date: z.string().nullable().default(null),
   end_date: z.string().nullable().default(null),
-  description: z.string().nullable().default(null),
+  description: z.array(z.string()).default([]),
   tech_stack: z.array(z.string()).default([]),
 });
 
@@ -70,7 +73,7 @@ export const educationSchema = z.object({
   course: z.string().nullable().default(null),
   start_date: z.string().nullable().default(null),
   end_date: z.string().nullable().default(null),
-  description: z.string().nullable().default(null),
+  description: z.array(z.string()).default([]),
 });
 
 export const socialLinkSchema = z.object({
@@ -79,6 +82,7 @@ export const socialLinkSchema = z.object({
 });
 
 export const parsedResumeSchema = z.object({
+  title: z.string().nullable().default(null),
   name: z.string().nullable().default(null),
   email: z.string().nullable().default(null),
   phone: z.string().nullable().default(null),
@@ -97,6 +101,7 @@ export type ParsedResume = z.infer<typeof parsedResumeSchema>;
 /** An all-empty ParsedResume, returned when parsing yields nothing usable. */
 export function emptyParsedResume(): ParsedResume {
   return {
+    title: null,
     name: null,
     email: null,
     phone: null,

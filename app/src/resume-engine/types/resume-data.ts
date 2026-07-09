@@ -3,6 +3,7 @@ import type { RichTextValue } from "./lexical";
 export type ResumeExperience = {
   company?: string;
   role?: string;
+  location?: string;
   start_date?: string;
   end_date?: string;
   description?: RichTextValue;
@@ -35,6 +36,7 @@ export type ResumeSocialLink = {
  */
 export type ResumeData = {
   name?: string;
+  title?: string;
   email?: string;
   phone?: string;
   location?: string;

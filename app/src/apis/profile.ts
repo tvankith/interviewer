@@ -75,6 +75,7 @@ export interface JobRequirementData {
 export interface Profile {
   id: string;
   user_id: string;
+  title?: string;
   name?: string;
   email?: string;
   phone?: string;

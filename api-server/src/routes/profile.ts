@@ -57,6 +57,7 @@ const stringArray = { type: 'array', items: { type: 'string' } };
 const parsedResumeResponseSchema = {
   type: 'object',
   properties: {
+    title: nullableString,
     name: nullableString,
     email: nullableString,
     phone: nullableString,
@@ -77,7 +78,7 @@ const parsedResumeResponseSchema = {
         type: 'object',
         properties: {
           name: nullableString,
-          description: nullableString,
+          description: stringArray,
           tech_stack: stringArray,
         },
       },
@@ -89,9 +90,10 @@ const parsedResumeResponseSchema = {
         properties: {
           company: nullableString,
           role: nullableString,
+          location: nullableString,
           start_date: nullableString,
           end_date: nullableString,
-          description: nullableString,
+          description: stringArray,
           tech_stack: stringArray,
         },
       },
@@ -105,7 +107,7 @@ const parsedResumeResponseSchema = {
           course: nullableString,
           start_date: nullableString,
           end_date: nullableString,
-          description: nullableString,
+          description: stringArray,
         },
       },
     },

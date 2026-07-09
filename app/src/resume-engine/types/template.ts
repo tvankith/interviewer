@@ -34,6 +34,10 @@ export type TextNodeProps = {
   bindingEnd?: string;
   /** Shown in place of an empty `bindingEnd` resolution (e.g. "Present"). */
   emptyEndFallback?: string;
+  /** Field label shown above `binding`'s input when editing a `bindingEnd` pair. */
+  startLabel?: string;
+  /** Field label shown above `bindingEnd`'s input when editing a `bindingEnd` pair. */
+  endLabel?: string;
   /** Static literal text instead of / alongside a binding (e.g. section labels). */
   text?: string;
   separator?: string;

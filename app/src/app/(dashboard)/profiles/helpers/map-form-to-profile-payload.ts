@@ -17,6 +17,7 @@ export const mapFormToProfilePayload = (data: CandidateFormValues) => ({
     })),
     educations: data?.educations || [],
     links: data?.links || [],
+    title: data?.title || "",
     name: data?.name || "",
     email: data?.email || "",
     phone: data?.phone,

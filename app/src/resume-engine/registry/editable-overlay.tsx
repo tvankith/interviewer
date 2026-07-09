@@ -11,7 +11,7 @@ import { normalizeRichText } from "../lexical-json/normalize-rich-text";
 import { lexicalDocHasText } from "../lexical-json/lexical-json-to-react";
 import { isLexicalDoc } from "../types/lexical";
 import type { RichTextValue } from "../types/lexical";
-import type { TemplateNode } from "../types/template";
+import type { TemplateNode, TextNodeProps } from "../types/template";
 import type {
   ListControls,
   RepeaterItemWrapperProps,
@@ -281,6 +281,8 @@ function PopoverEditable({
   absoluteBinding,
   hrefValue,
   hrefAbsoluteBinding,
+  bindingEndValue,
+  bindingEndAbsoluteBinding,
   children,
 }: {
   node: TemplateNode;
@@ -288,17 +290,21 @@ function PopoverEditable({
   absoluteBinding: string;
   hrefValue?: unknown;
   hrefAbsoluteBinding?: string;
+  bindingEndValue?: unknown;
+  bindingEndAbsoluteBinding?: string;
   children: ReactNode;
 }) {
   const host = useContext(ResumeEditorHostContext);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<unknown>(value);
   const [hrefDraft, setHrefDraft] = useState<unknown>(hrefValue);
+  const [endDraft, setEndDraft] = useState<unknown>(bindingEndValue);
 
   const handleOpenChange = (next: boolean) => {
     if (next) {
       setDraft(value);
       setHrefDraft(hrefValue);
+      setEndDraft(bindingEndValue);
     }
     setOpen(next);
   };
@@ -306,6 +312,7 @@ function PopoverEditable({
   const handleSave = () => {
     host?.onEdit(absoluteBinding, draft);
     if (hrefAbsoluteBinding) host?.onEdit(hrefAbsoluteBinding, hrefDraft);
+    if (bindingEndAbsoluteBinding) host?.onEdit(bindingEndAbsoluteBinding, endDraft);
     setOpen(false);
   };
 
@@ -347,6 +354,21 @@ function PopoverEditable({
               <EditorField value={hrefDraft} onChange={setHrefDraft} />
             </div>
           </div>
+        ) : bindingEndAbsoluteBinding ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                {(node.props as TextNodeProps | undefined)?.startLabel ?? "Start"}
+              </label>
+              <EditorField value={draft} onChange={setDraft} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                {(node.props as TextNodeProps | undefined)?.endLabel ?? "End"}
+              </label>
+              <EditorField value={endDraft} onChange={setEndDraft} />
+            </div>
+          </div>
         ) : (
           <EditorField value={draft} onChange={setDraft} />
         )}
@@ -384,6 +406,8 @@ export function EditableOverlay({
   absoluteBinding,
   hrefValue,
   hrefAbsoluteBinding,
+  bindingEndValue,
+  bindingEndAbsoluteBinding,
   children,
 }: {
   node: TemplateNode;
@@ -391,6 +415,8 @@ export function EditableOverlay({
   absoluteBinding: string;
   hrefValue?: unknown;
   hrefAbsoluteBinding?: string;
+  bindingEndValue?: unknown;
+  bindingEndAbsoluteBinding?: string;
   children: ReactNode;
 }) {
   if (node.type === "RichText") {
@@ -408,6 +434,8 @@ export function EditableOverlay({
       absoluteBinding={absoluteBinding}
       hrefValue={hrefValue}
       hrefAbsoluteBinding={hrefAbsoluteBinding}
+      bindingEndValue={bindingEndValue}
+      bindingEndAbsoluteBinding={bindingEndAbsoluteBinding}
     >
       {children}
     </PopoverEditable>

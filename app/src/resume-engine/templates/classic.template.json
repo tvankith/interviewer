@@ -21,6 +21,13 @@
             "props": { "as": "h1", "variant": "h1", "placeholder": "Click to add your name" }
           },
           {
+            "id": "title",
+            "type": "Text",
+            "binding": "title",
+            "editable": { "editable": true, "removable": true },
+            "props": { "as": "h2", "variant": "h2", "muted": true, "placeholder": "Click to add your title" }
+          },
+          {
             "id": "contact-row",
             "type": "Row",
             "className": "flex-wrap",
@@ -120,18 +127,51 @@
                     "props": { "justify": "space-between", "align": "baseline" },
                     "children": [
                       {
-                        "id": "exp-title",
-                        "type": "Text",
-                        "binding": "role",
-                        "editable": { "editable": true },
-                        "props": { "variant": "label", "bindingEnd": "company", "separator": " — ", "placeholder": "Click to add role & company" }
+                        "id": "exp-title-row",
+                        "type": "Row",
+                        "props": { "gap": "xs", "align": "baseline" },
+                        "children": [
+                          {
+                            "id": "exp-role",
+                            "type": "Text",
+                            "binding": "role",
+                            "editable": { "editable": true },
+                            "props": { "variant": "label", "placeholder": "Click to add role" }
+                          },
+                          {
+                            "id": "exp-role-company-sep",
+                            "type": "Text",
+                            "editable": { "editable": false },
+                            "props": { "variant": "label", "text": " — " }
+                          },
+                          {
+                            "id": "exp-company",
+                            "type": "Text",
+                            "binding": "company",
+                            "editable": { "editable": true },
+                            "props": { "variant": "label", "placeholder": "Click to add company" }
+                          },
+                          {
+                            "id": "exp-company-location-sep",
+                            "type": "Text",
+                            "editable": { "editable": false },
+                            "props": { "variant": "small", "muted": true, "text": " · " }
+                          },
+                          {
+                            "id": "exp-location",
+                            "type": "Text",
+                            "binding": "location",
+                            "editable": { "editable": true, "removable": true },
+                            "props": { "variant": "small", "muted": true, "placeholder": "Click to add location" }
+                          }
+                        ]
                       },
                       {
                         "id": "exp-date",
                         "type": "Text",
                         "binding": "start_date",
                         "editable": { "editable": true },
-                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – ", "placeholder": "Click to add dates" }
+                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – ", "placeholder": "Click to add dates", "startLabel": "Start date", "endLabel": "End date" }
                       }
                     ]
                   },
@@ -173,7 +213,7 @@
                         "type": "Text",
                         "binding": "start_date",
                         "editable": { "editable": true },
-                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – ", "placeholder": "Click to add dates" }
+                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – ", "placeholder": "Click to add dates", "startLabel": "Start date", "endLabel": "End date" }
                       }
                     ]
                   },

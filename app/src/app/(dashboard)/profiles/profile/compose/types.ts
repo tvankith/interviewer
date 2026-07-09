@@ -35,6 +35,7 @@ export type CandidateFormValues = {
     links?: SocialLink[];
     about?: string;
     resume_file?: File | null;
+    title?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -63,6 +64,7 @@ export type CandidatePayload = {
     }[];
     educations?: Education[];
     links?: SocialLink[];
+    title?: string;
     name?: string;
     email?: string;
     phone?: string;
