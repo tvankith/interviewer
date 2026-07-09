@@ -31,7 +31,7 @@ function AuthCallback() {
       const supabase = createSupabaseBrowserClient();
 
       try {
-        const code = params.get("code");
+        const code = params?.get("code");
         if (!code) {
           throw new Error("Missing authorization code");
         }
@@ -55,7 +55,7 @@ function AuthCallback() {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || "Authentication failed");
         }
-        const dest = params.get("redirect_url") || "/";
+        const dest = params?.get("redirect_url") || "/";
         router.replace(dest);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Authentication failed");
