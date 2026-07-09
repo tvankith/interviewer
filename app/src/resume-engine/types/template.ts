@@ -72,6 +72,16 @@ export type ListNodeProps = {
   prefixBinding?: string;
   /** Literal text appended right after `prefixBinding`'s resolved value, e.g. ":" -> "Frontend:". */
   prefixSuffix?: string;
+  /**
+   * Pagination-only: restricts a repeater's rendered entries to array indices in
+   * [start, end). Absent means render every entry. Set by paginated-resume.tsx when
+   * splitting a repeater section's entries across multiple screen pages — the bound
+   * array itself is never sliced, so absolute binding paths (e.g. `experiences.3`) stay
+   * correct regardless of which page an entry lands on.
+   */
+  entryRange?: [start: number, end: number];
+  /** Pagination-only: suppresses the repeater's "+ Add" control on non-terminal page chunks. */
+  hideAddButton?: boolean;
 };
 
 export type PageNodeProps = {
@@ -104,6 +114,13 @@ export type DividerNodeProps = {
 
 export type SectionNodeProps = {
   title?: string;
+  /**
+   * Whether the whole section must stay on one page (print `page-break-inside: avoid`).
+   * Defaults to true. Repeater sections (Experience/Education/Projects) set this to
+   * false and instead mark each entry atomic, so entries that fit stay on the current
+   * page instead of the whole section jumping to the next one.
+   */
+  avoidBreak?: boolean;
 };
 
 export type ImageNodeProps = {

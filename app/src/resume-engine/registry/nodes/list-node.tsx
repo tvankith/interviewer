@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { registerNodeType, RenderNode, getListControls, getDiffEntryWrapper, type NodeComponentProps, type BindingScope } from "../node-registry";
 import { resolveBinding, toAbsoluteBinding } from "../../binding/resolve-binding";
 import { correspondPositionally, type EntryCorrespondence } from "../../diff/list-correspondence";
+import { buildRepeaterEntryScope } from "../../pagination/repeater-entry-scope";
 import type { ListNodeProps, TemplateNode } from "../../types/template";
 import type { ThemeDocument } from "../../types/theme";
 import type { ResumeData } from "../../types/resume-data";
@@ -26,84 +27,102 @@ function buildBlankItem(itemTemplate: TemplateNode): Record<string, unknown> {
   return blank;
 }
 
-/** Renders one repeater's entries in diff mode: modified entries cascade their own per-field diffs; added/removed entries render as whole decorated blocks (see design.md Decision 2/3). */
+/**
+ * Renders one repeater entry's diff decoration (added/removed whole-block, or modified/unchanged
+ * cascading per-field diffs) — exported so the pagination hidden measurement pass can measure the
+ * exact same markup (including the DiffEntry accept/reject wrapper, which adds real flow height)
+ * rather than an approximation that would silently under-measure diff-mode pages.
+ */
+export function renderRepeaterDiffEntry(
+  entry: EntryCorrespondence<unknown>,
+  itemTemplate: TemplateNode,
+  listAbsoluteBinding: string | undefined,
+  isTopLevelUnit: boolean,
+  resumeData: ResumeData,
+  theme: ThemeDocument
+): ReactNode {
+  const DiffEntry = getDiffEntryWrapper();
+  const itemAbsolutePath = listAbsoluteBinding ? `${listAbsoluteBinding}.${entry.index}` : undefined;
+
+  if (entry.kind === "removed") {
+    const itemScope: BindingScope = { value: entry.oldItem, absolutePath: itemAbsolutePath };
+    const rendered = (
+      <RenderNode
+        node={{ ...itemTemplate, id: `${itemTemplate.id}-removed-${entry.index}` }}
+        scope={itemScope}
+        resumeData={resumeData}
+        theme={theme}
+        mode="static"
+      />
+    );
+    const content = <div className="text-red-600 line-through decoration-red-600/70">{rendered}</div>;
+    return isTopLevelUnit && listAbsoluteBinding && DiffEntry ? (
+      <DiffEntry key={`removed-${entry.index}`} listAbsoluteBinding={listAbsoluteBinding} index={entry.index} kind="removed">
+        {content}
+      </DiffEntry>
+    ) : (
+      <Fragment key={`removed-${entry.index}`}>{content}</Fragment>
+    );
+  }
+
+  if (entry.kind === "added") {
+    const itemScope: BindingScope = { value: entry.newItem, absolutePath: itemAbsolutePath };
+    const rendered = (
+      <RenderNode
+        node={{ ...itemTemplate, id: `${itemTemplate.id}-added-${entry.index}` }}
+        scope={itemScope}
+        resumeData={resumeData}
+        theme={theme}
+        mode="static"
+      />
+    );
+    return isTopLevelUnit && listAbsoluteBinding && DiffEntry ? (
+      <DiffEntry key={`added-${entry.index}`} listAbsoluteBinding={listAbsoluteBinding} index={entry.index} kind="added">
+        {rendered}
+      </DiffEntry>
+    ) : (
+      <Fragment key={`added-${entry.index}`}>{rendered}</Fragment>
+    );
+  }
+
+  // modified or unchanged — recurse in diff mode with both scopes so every
+  // field inside cascades its own scalar/rich-text diff decoration; an
+  // "unchanged" entry naturally renders with zero decoration this way.
+  const itemScope: BindingScope = { value: entry.newItem, absolutePath: itemAbsolutePath };
+  const previousItemScope: BindingScope = { value: entry.oldItem, absolutePath: itemAbsolutePath };
+  const rendered = (
+    <RenderNode
+      node={{ ...itemTemplate, id: `${itemTemplate.id}-${entry.index}` }}
+      scope={itemScope}
+      previousScope={previousItemScope}
+      resumeData={resumeData}
+      theme={theme}
+      mode="diff"
+    />
+  );
+
+  return entry.kind === "modified" && isTopLevelUnit && listAbsoluteBinding && DiffEntry ? (
+    <DiffEntry key={entry.index} listAbsoluteBinding={listAbsoluteBinding} index={entry.index} kind="modified">
+      {rendered}
+    </DiffEntry>
+  ) : (
+    <Fragment key={entry.index}>{rendered}</Fragment>
+  );
+}
+
+/** Renders one repeater's entries in diff mode (see renderRepeaterDiffEntry for per-entry decoration rules). */
 function renderRepeaterDiff(
   correspondence: EntryCorrespondence<unknown>[],
   itemTemplate: TemplateNode,
   listAbsoluteBinding: string | undefined,
   isTopLevelUnit: boolean,
   resumeData: ResumeData,
-  theme: ThemeDocument
+  theme: ThemeDocument,
+  entryRange?: [start: number, end: number]
 ): ReactNode[] {
-  const DiffEntry = getDiffEntryWrapper();
-
   return correspondence.map((entry) => {
-    const itemAbsolutePath = listAbsoluteBinding ? `${listAbsoluteBinding}.${entry.index}` : undefined;
-
-    if (entry.kind === "removed") {
-      const itemScope: BindingScope = { value: entry.oldItem, absolutePath: itemAbsolutePath };
-      const rendered = (
-        <RenderNode
-          node={{ ...itemTemplate, id: `${itemTemplate.id}-removed-${entry.index}` }}
-          scope={itemScope}
-          resumeData={resumeData}
-          theme={theme}
-          mode="static"
-        />
-      );
-      const content = <div className="text-red-600 line-through decoration-red-600/70">{rendered}</div>;
-      return isTopLevelUnit && listAbsoluteBinding && DiffEntry ? (
-        <DiffEntry key={`removed-${entry.index}`} listAbsoluteBinding={listAbsoluteBinding} index={entry.index} kind="removed">
-          {content}
-        </DiffEntry>
-      ) : (
-        <Fragment key={`removed-${entry.index}`}>{content}</Fragment>
-      );
-    }
-
-    if (entry.kind === "added") {
-      const itemScope: BindingScope = { value: entry.newItem, absolutePath: itemAbsolutePath };
-      const rendered = (
-        <RenderNode
-          node={{ ...itemTemplate, id: `${itemTemplate.id}-added-${entry.index}` }}
-          scope={itemScope}
-          resumeData={resumeData}
-          theme={theme}
-          mode="static"
-        />
-      );
-      return isTopLevelUnit && listAbsoluteBinding && DiffEntry ? (
-        <DiffEntry key={`added-${entry.index}`} listAbsoluteBinding={listAbsoluteBinding} index={entry.index} kind="added">
-          {rendered}
-        </DiffEntry>
-      ) : (
-        <Fragment key={`added-${entry.index}`}>{rendered}</Fragment>
-      );
-    }
-
-    // modified or unchanged — recurse in diff mode with both scopes so every
-    // field inside cascades its own scalar/rich-text diff decoration; an
-    // "unchanged" entry naturally renders with zero decoration this way.
-    const itemScope: BindingScope = { value: entry.newItem, absolutePath: itemAbsolutePath };
-    const previousItemScope: BindingScope = { value: entry.oldItem, absolutePath: itemAbsolutePath };
-    const rendered = (
-      <RenderNode
-        node={{ ...itemTemplate, id: `${itemTemplate.id}-${entry.index}` }}
-        scope={itemScope}
-        previousScope={previousItemScope}
-        resumeData={resumeData}
-        theme={theme}
-        mode="diff"
-      />
-    );
-
-    return entry.kind === "modified" && isTopLevelUnit && listAbsoluteBinding && DiffEntry ? (
-      <DiffEntry key={entry.index} listAbsoluteBinding={listAbsoluteBinding} index={entry.index} kind="modified">
-        {rendered}
-      </DiffEntry>
-    ) : (
-      <Fragment key={entry.index}>{rendered}</Fragment>
-    );
+    if (entryRange && (entry.index < entryRange[0] || entry.index >= entryRange[1])) return null;
+    return renderRepeaterDiffEntry(entry, itemTemplate, listAbsoluteBinding, isTopLevelUnit, resumeData, theme);
   });
 }
 
@@ -202,7 +221,7 @@ function ListNode({ node, scope, previousScope, resumeData, theme, mode }: NodeC
       );
       return (
         <div className={cn("flex flex-col items-stretch", node.className)} style={{ gap: theme.spacing[props.gap ?? "sm"] }}>
-          {renderRepeaterDiff(correspondence, props.itemTemplate, listAbsoluteBinding, isTopLevelUnit, resumeData, theme)}
+          {renderRepeaterDiff(correspondence, props.itemTemplate, listAbsoluteBinding, isTopLevelUnit, resumeData, theme, props.entryRange)}
         </div>
       );
     }
@@ -271,10 +290,8 @@ function ListNode({ node, scope, previousScope, resumeData, theme, mode }: NodeC
         style={{ gap: theme.spacing[props.gap ?? "sm"] }}
       >
         {items.map((item, index) => {
-          const itemScope: BindingScope = {
-            value: item,
-            absolutePath: `${listAbsoluteBinding}.${index}`,
-          };
+          if (props.entryRange && (index < props.entryRange[0] || index >= props.entryRange[1])) return null;
+          const itemScope: BindingScope = buildRepeaterEntryScope(listAbsoluteBinding, index, item);
           const rendered = (
             <RenderNode
               node={{ ...itemTemplate, id: `${itemTemplate.id}-${index}` }}
@@ -298,7 +315,7 @@ function ListNode({ node, scope, previousScope, resumeData, theme, mode }: NodeC
           }
           return <Fragment key={index}>{rendered}</Fragment>;
         })}
-        {manage?.controls && (
+        {manage?.controls && !props.hideAddButton && (
           <manage.controls.AddItemButton
             listAbsoluteBinding={manage.listAbsoluteBinding}
             items={items}

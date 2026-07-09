@@ -28,12 +28,19 @@ export function headingFontFamily(theme: ThemeDocument): string {
 export function themeToCssText(theme: ThemeDocument): string {
   return `
     * { box-sizing: border-box; }
-    body { margin: 0; background: #fff; }
+    html, body { margin: 0; line-height: 1.5; }
+    body { background: #fff; }
+    h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote, figure { margin: 0; }
+    ul, ol { padding: 0; list-style: none; }
 
     .flex { display: flex; }
+    .flex-row { flex-direction: row; }
     .flex-col { flex-direction: column; }
     .flex-wrap { flex-wrap: wrap; }
     .items-center { align-items: center; }
+    .items-baseline { align-items: baseline; }
+    .items-stretch { align-items: stretch; }
+    .items-start { align-items: flex-start; }
     .self-stretch { align-self: stretch; }
     .min-w-0 { min-width: 0; }
     .w-full { width: 100%; }

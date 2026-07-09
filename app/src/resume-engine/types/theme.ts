@@ -26,6 +26,10 @@ export interface ThemeDocument {
   page: {
     background: string;
     maxWidth: string;
+    /** Fixed page width (e.g. A4's 210mm ≈ 794px @96dpi) used by the interactive preview's pagination. */
+    width: string;
+    /** Fixed page height (e.g. A4's 297mm ≈ 1123px @96dpi) used by the interactive preview's pagination. */
+    height: string;
     padding: string;
   };
 }

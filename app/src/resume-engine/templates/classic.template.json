@@ -121,7 +121,7 @@
       {
         "id": "experience-section",
         "type": "Section",
-        "props": { "title": "Experience" },
+        "props": { "title": "Experience", "avoidBreak": false },
         "children": [
           {
             "id": "experience-list",
@@ -135,6 +135,7 @@
               "itemTemplate": {
                 "id": "experience-item",
                 "type": "Stack",
+                "className": "resume-engine-avoid-break",
                 "props": { "gap": "xs" },
                 "children": [
                   {
@@ -202,7 +203,7 @@
       {
         "id": "education-section",
         "type": "Section",
-        "props": { "title": "Education" },
+        "props": { "title": "Education", "avoidBreak": false },
         "children": [
           {
             "id": "education-list",
@@ -216,6 +217,7 @@
               "itemTemplate": {
                 "id": "education-item",
                 "type": "Stack",
+                "className": "resume-engine-avoid-break",
                 "props": { "gap": "xs" },
                 "children": [
                   {
@@ -251,7 +253,7 @@
       {
         "id": "projects-section",
         "type": "Section",
-        "props": { "title": "Projects" },
+        "props": { "title": "Projects", "avoidBreak": false },
         "children": [
           {
             "id": "projects-list",
@@ -265,6 +267,7 @@
               "itemTemplate": {
                 "id": "project-item",
                 "type": "Stack",
+                "className": "resume-engine-avoid-break",
                 "props": { "gap": "xs" },
                 "children": [
                   { "id": "project-name", "type": "Text", "binding": "name", "editable": { "editable": true }, "props": { "variant": "label", "placeholder": "Click to add project name" } },

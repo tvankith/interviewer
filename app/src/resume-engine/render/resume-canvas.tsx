@@ -14,6 +14,7 @@ import {
 import { ResumeEditorHostProvider, EditableOverlay, resumeListControls } from "../registry/editable-overlay";
 import { ResumeDiffHostProvider, DiffOverlay, DiffEntryWrapper, type ResumeDiffHostValue } from "../registry/diff-overlay";
 import { googleFontsLinkHref } from "../theme/resolve-theme";
+import PaginatedResume from "./paginated-resume";
 import type { ResumeData } from "../types/resume-data";
 import type { TemplateDocument } from "../types/template";
 import type { ThemeDocument } from "../types/theme";
@@ -64,16 +65,23 @@ export default function ResumeCanvas({
     </>
   );
 
-  const content = (
-    <RenderNode
-      node={templateDoc.root}
-      scope={rootScope}
-      previousScope={previousRootScope}
-      resumeData={data}
-      theme={themeDoc}
-      mode={mode}
-    />
-  );
+  // The interactive/diff preview paginates client-side into fixed A4 pages (see
+  // paginated-resume.tsx); any other mode (e.g. the unused "static" default) renders the
+  // template as a single continuous page, same as the PDF path (render-static-html.ts),
+  // which must stay decoupled from PaginatedResume and its DOM-measurement machinery.
+  const content =
+    mode === "interactive" || mode === "diff" ? (
+      <PaginatedResume templateDoc={templateDoc} data={data} previousData={previousData} theme={themeDoc} mode={mode} />
+    ) : (
+      <RenderNode
+        node={templateDoc.root}
+        scope={rootScope}
+        previousScope={previousRootScope}
+        resumeData={data}
+        theme={themeDoc}
+        mode={mode}
+      />
+    );
 
   if (mode === "diff") {
     return (

@@ -36,6 +36,8 @@
   "page": {
     "background": "#ffffff",
     "maxWidth": "800px",
+    "width": "794px",
+    "height": "1123px",
     "padding": "36px 48px"
   }
 }

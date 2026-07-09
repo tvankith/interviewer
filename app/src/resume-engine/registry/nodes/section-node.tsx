@@ -5,7 +5,7 @@ import type { SectionNodeProps } from "../../types/template";
 function SectionNode({ node, scope, resumeData, theme, mode, previousScope }: NodeComponentProps) {
   const props = (node.props as SectionNodeProps) || {};
   return (
-    <div className={cn("resume-engine-avoid-break", node.className)} style={{ marginTop: theme.spacing.md }}>
+    <div className={cn(props.avoidBreak !== false && "resume-engine-avoid-break", node.className)} style={{ marginTop: theme.spacing.md }}>
       {props.title && (
         <div
           style={{
