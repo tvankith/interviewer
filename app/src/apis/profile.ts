@@ -2,6 +2,8 @@ import { CandidatePayload } from "@/app/(dashboard)/profiles/profile/compose/typ
 import { axiosInstance } from "./axios-instances";
 import { mapProfileToForm } from "@/app/(dashboard)/profiles/helpers/map-profile-to-form";
 import serverApi from "@/lib/backend";
+import type { RichTextValue } from "@/resume-engine/types/lexical";
+import type { SkillGroup } from "@/design-system";
 
 export const parseResumeApi = async (input: {
   file?: File | null;
@@ -49,7 +51,7 @@ export const createCandidateApi = async (payload: CandidatePayload): Promise<{ i
   course?: string;
   start_date?: string;
   end_date?: string;
-  description?: string;
+  description?: RichTextValue;
 }
 
 export interface SocialLink {
@@ -74,17 +76,20 @@ export interface JobRequirementData {
 export interface Profile {
   id: string;
   user_id: string;
+  title?: string;
   name?: string;
   email?: string;
   phone?: string;
   location?: string;
-  summary?: string;
+  summary?: RichTextValue;
   website?: string;
   projects: Project[];
   experiences: Experience[];
   educations: Education[];
   links: SocialLink[];
-  skills: string[];
+  skills: SkillGroup[];
+  template_id?: string | null;
+  theme_id?: string | null;
   created_at: string;
   job_requirement_id?: string;
   job_requirement?: JobRequirementData | null;
@@ -93,7 +98,7 @@ export interface Profile {
 export interface Project {
   name: string;
   tech_stack: string[];
-  description: string;
+  description: RichTextValue;
 }
 
 export interface Experience {
@@ -102,7 +107,7 @@ export interface Experience {
   end_date: string;
   start_date: string;
   tech_stack: string[];
-  description: string;
+  description: RichTextValue;
 }
 
 /** -----------------------------

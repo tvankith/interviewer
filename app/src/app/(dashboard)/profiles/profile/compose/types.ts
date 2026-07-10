@@ -1,7 +1,9 @@
+import type { RichTextValue } from "@/resume-engine/types/lexical";
+import type { SkillGroup } from "@/design-system";
 
 type Project = {
     name?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -10,7 +12,7 @@ type Experience = {
     role?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -19,7 +21,7 @@ export type Education = {
     course?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
 };
 
 export type SocialLink = {
@@ -34,21 +36,23 @@ export type CandidateFormValues = {
     links?: SocialLink[];
     about?: string;
     resume_file?: File | null;
+    title?: string;
     name?: string;
     email?: string;
     phone?: string;
     location?: string;
-    summary?: string;
-    skills?: string[];
+    summary?: RichTextValue;
+    skills?: SkillGroup[];
     website?: string;
     template_id?: string;
+    theme_id?: string;
     target_role?: string;
 };
 
 export type CandidatePayload = {
     projects?: {
         name?: string;
-        description?: string;
+        description?: RichTextValue;
         tech_stack: string[];
     }[];
     experiences?: {
@@ -56,17 +60,18 @@ export type CandidatePayload = {
         role?: string;
         start_date?: string;
         end_date?: string;
-        description?: string;
+        description?: RichTextValue;
         tech_stack: string[];
     }[];
     educations?: Education[];
     links?: SocialLink[];
+    title?: string;
     name?: string;
     email?: string;
     phone?: string;
     location?: string;
-    summary?: string;
-    skills?: string[];
+    summary?: RichTextValue;
+    skills?: SkillGroup[];
     website?: string;
     target_role?: string;
 };

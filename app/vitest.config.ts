@@ -31,6 +31,16 @@ export default defineConfig({
           },
         },
       },
+      // Plain Node-environment unit tests for pure logic (no browser/DOM
+      // needed) — separate from the Storybook interaction project above.
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

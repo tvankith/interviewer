@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "id": "tpl-classic-v1",
+  "name": "Classic",
+  "root": {
+    "id": "page",
+    "type": "Page",
+    "children": [
+      {
+        "id": "header",
+        "type": "Column",
+        "className": "items-center text-center",
+        "props": { "gap": "xs" },
+        "children": [
+          {
+            "id": "name",
+            "type": "Text",
+            "binding": "name",
+            "editable": { "editable": true, "removable": true },
+            "className": "uppercase tracking-widest",
+            "props": { "as": "h1", "variant": "h1", "placeholder": "Click to add your name" }
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "binding": "title",
+            "editable": { "editable": true, "removable": true },
+            "props": { "as": "h2", "variant": "h2", "muted": true, "placeholder": "Click to add your title" }
+          },
+          {
+            "id": "contact-row",
+            "type": "Row",
+            "className": "flex-wrap",
+            "props": { "gap": "sm", "justify": "center" },
+            "children": [
+              { "id": "email", "type": "Text", "binding": "email", "editable": { "editable": true, "removable": true }, "props": { "variant": "small", "placeholder": "Click to add email" } },
+              { "id": "phone", "type": "Text", "binding": "phone", "editable": { "editable": true, "removable": true }, "props": { "variant": "small", "placeholder": "Click to add phone" } },
+              { "id": "location", "type": "Text", "binding": "location", "editable": { "editable": true, "removable": true }, "props": { "variant": "small", "placeholder": "Click to add location" } }
+            ]
+          },
+          {
+            "id": "links-row",
+            "type": "Row",
+            "className": "flex-wrap",
+            "props": { "gap": "sm", "justify": "center" },
+            "children": [
+              {
+                "id": "links",
+                "type": "List",
+                "binding": "links",
+                "className": "flex-row flex-wrap items-baseline",
+                "editable": { "addable": true },
+                "props": {
+                  "gap": "sm",
+                  "addLabel": "Add link",
+                  "itemTemplate": {
+                    "id": "link-item",
+                    "type": "Row",
+                    "props": { "gap": "xs", "align": "baseline" },
+                    "children": [
+                      {
+                        "id": "link-label",
+                        "type": "Text",
+                        "binding": "social_media",
+                        "editable": { "editable": true },
+                        "props": { "variant": "small", "href": true, "hrefBinding": "url", "placeholder": "Click to add label" }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      { "id": "header-divider", "type": "Divider" },
+      {
+        "id": "summary-section",
+        "type": "Section",
+        "props": { "title": "Summary" },
+        "children": [
+          {
+            "id": "summary-text",
+            "type": "RichText",
+            "binding": "summary",
+            "editable": { "editable": true, "removable": true },
+            "props": { "placeholder": "Click to add a professional summary" }
+          }
+        ]
+      },
+      {
+        "id": "skills-section",
+        "type": "Section",
+        "props": { "title": "Skills" },
+        "children": [
+          {
+            "id": "skills-list",
+            "type": "List",
+            "binding": "skills",
+            "editable": { "addable": true },
+            "props": {
+              "gap": "sm",
+              "placeholder": "Click to add skills",
+              "addLabel": "Add category",
+              "itemTemplate": {
+                "id": "skill-group-item",
+                "type": "List",
+                "binding": "skills",
+                "editable": { "editable": true },
+                "props": {
+                  "display": "chip",
+                  "placeholder": "Click to add skills",
+                  "prefixBinding": "category",
+                  "prefixSuffix": ":"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "experience-section",
+        "type": "Section",
+        "props": { "title": "Experience", "avoidBreak": false },
+        "children": [
+          {
+            "id": "experience-list",
+            "type": "List",
+            "binding": "experiences",
+            "editable": { "addable": true },
+            "props": {
+              "gap": "sm",
+              "placeholder": "No experience added yet",
+              "addLabel": "Add experience",
+              "itemTemplate": {
+                "id": "experience-item",
+                "type": "Stack",
+                "className": "resume-engine-avoid-break",
+                "props": { "gap": "xs" },
+                "children": [
+                  {
+                    "id": "exp-header",
+                    "type": "Row",
+                    "props": { "justify": "space-between", "align": "baseline" },
+                    "children": [
+                      {
+                        "id": "exp-title-row",
+                        "type": "Row",
+                        "props": { "gap": "xs", "align": "baseline" },
+                        "children": [
+                          {
+                            "id": "exp-role",
+                            "type": "Text",
+                            "binding": "role",
+                            "editable": { "editable": true },
+                            "props": { "variant": "label", "placeholder": "Click to add role" }
+                          },
+                          {
+                            "id": "exp-role-company-sep",
+                            "type": "Text",
+                            "editable": { "editable": false },
+                            "props": { "variant": "label", "text": " — " }
+                          },
+                          {
+                            "id": "exp-company",
+                            "type": "Text",
+                            "binding": "company",
+                            "editable": { "editable": true },
+                            "props": { "variant": "label", "placeholder": "Click to add company" }
+                          },
+                          {
+                            "id": "exp-company-location-sep",
+                            "type": "Text",
+                            "editable": { "editable": false },
+                            "props": { "variant": "small", "muted": true, "text": " · " }
+                          },
+                          {
+                            "id": "exp-location",
+                            "type": "Text",
+                            "binding": "location",
+                            "editable": { "editable": true },
+                            "props": { "variant": "small", "muted": true, "placeholder": "Click to add location" }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "exp-date",
+                        "type": "Text",
+                        "binding": "start_date",
+                        "editable": { "editable": true },
+                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – ", "placeholder": "Click to add dates", "startLabel": "Start date", "endLabel": "End date" }
+                      }
+                    ]
+                  },
+                  { "id": "exp-description", "type": "RichText", "binding": "description", "editable": { "editable": true }, "props": { "placeholder": "Click to add a description" } },
+                  { "id": "exp-tech", "type": "List", "binding": "tech_stack", "editable": { "editable": true }, "props": { "display": "chip", "placeholder": "Click to add tech stack" } }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "education-section",
+        "type": "Section",
+        "props": { "title": "Education", "avoidBreak": false },
+        "children": [
+          {
+            "id": "education-list",
+            "type": "List",
+            "binding": "educations",
+            "editable": { "addable": true },
+            "props": {
+              "gap": "sm",
+              "placeholder": "No education added yet",
+              "addLabel": "Add education",
+              "itemTemplate": {
+                "id": "education-item",
+                "type": "Stack",
+                "className": "resume-engine-avoid-break",
+                "props": { "gap": "xs" },
+                "children": [
+                  {
+                    "id": "edu-header",
+                    "type": "Row",
+                    "props": { "justify": "space-between", "align": "baseline" },
+                    "children": [
+                      { "id": "edu-title", "type": "Text", "binding": "institute", "editable": { "editable": true }, "props": { "variant": "label", "placeholder": "Click to add institute" } },
+                      {
+                        "id": "edu-date",
+                        "type": "Text",
+                        "binding": "start_date",
+                        "editable": { "editable": true },
+                        "props": { "variant": "small", "muted": true, "bindingEnd": "end_date", "separator": " – ", "placeholder": "Click to add dates", "startLabel": "Start date", "endLabel": "End date" }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "edu-course",
+                    "type": "Text",
+                    "binding": "course",
+                    "editable": { "editable": true },
+                    "className": "italic",
+                    "props": { "variant": "small", "muted": true, "placeholder": "Click to add course" }
+                  },
+                  { "id": "edu-description", "type": "RichText", "binding": "description", "editable": { "editable": true }, "props": { "placeholder": "Click to add a description" } }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "projects-section",
+        "type": "Section",
+        "props": { "title": "Projects", "avoidBreak": false },
+        "children": [
+          {
+            "id": "projects-list",
+            "type": "List",
+            "binding": "projects",
+            "editable": { "addable": true },
+            "props": {
+              "gap": "sm",
+              "placeholder": "No projects added yet",
+              "addLabel": "Add project",
+              "itemTemplate": {
+                "id": "project-item",
+                "type": "Stack",
+                "className": "resume-engine-avoid-break",
+                "props": { "gap": "xs" },
+                "children": [
+                  { "id": "project-name", "type": "Text", "binding": "name", "editable": { "editable": true }, "props": { "variant": "label", "placeholder": "Click to add project name" } },
+                  { "id": "project-description", "type": "RichText", "binding": "description", "editable": { "editable": true }, "props": { "placeholder": "Click to add a description" } },
+                  { "id": "project-tech", "type": "List", "binding": "tech_stack", "editable": { "editable": true }, "props": { "display": "chip", "placeholder": "Click to add tech stack" } }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

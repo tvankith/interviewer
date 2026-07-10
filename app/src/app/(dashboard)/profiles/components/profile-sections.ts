@@ -6,6 +6,7 @@ import {
     GraduationCap,
     FolderOpen,
     Briefcase,
+    Palette,
 } from "lucide-react";
 import { type StepNavItem } from "@/components/basic/step-nav";
 
@@ -20,7 +21,7 @@ export const FORM_SECTIONS = [
 ] as const;
 
 export const DESIGN_SECTIONS = [
-    // { id: "template", label: "Template", Icon: Briefcase },
+    { id: "template", label: "Template", Icon: Palette },
 ] as const;
 
 export const FLAT_SECTIONS: StepNavItem[] = [...FORM_SECTIONS, ...DESIGN_SECTIONS];

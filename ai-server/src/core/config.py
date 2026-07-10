@@ -30,11 +30,16 @@ class Config:
     MCP_URL: str
     API_SERVER_URL: str
     LOG_LEVEL: str
-    SUPABASE_URL: str
-    SUPABASE_JWT_SECRET: str
+    AI_SERVER_TOKEN_SECRET: str
+    AI_SERVER_INTERNAL_SECRET: str
     LANGFUSE_PUBLIC_KEY: str | None
     LANGFUSE_SECRET_KEY: str | None
     LANGFUSE_BASE_URL: str
+    RAG_QDRANT_URL: str
+    RAG_QDRANT_API_KEY: str
+    RAG_QDRANT_COLLECTION: str
+    RAG_EMBEDDING_MODEL: str
+    RAG_TOP_K: int
 
     @property
     def LANGFUSE_ENABLED(self) -> bool:
@@ -53,12 +58,17 @@ def load_config() -> Config:
         MCP_URL=_get_env("MCP_URL"),
         API_SERVER_URL=_get_env("API_SERVER_URL"),
         LOG_LEVEL=_get_env("LOG_LEVEL"),
-        SUPABASE_URL=_get_env("SUPABASE_URL"),
-        SUPABASE_JWT_SECRET=_get_env("SUPABASE_JWT_SECRET"),
+        AI_SERVER_TOKEN_SECRET=_get_env("AI_SERVER_TOKEN_SECRET"),
+        AI_SERVER_INTERNAL_SECRET=_get_env("AI_SERVER_INTERNAL_SECRET"),
         # Langfuse stays opt-in: unset means observability is disabled, not misconfigured.
         LANGFUSE_PUBLIC_KEY=_get_env_optional("LANGFUSE_PUBLIC_KEY"),
         LANGFUSE_SECRET_KEY=_get_env_optional("LANGFUSE_SECRET_KEY"),
         LANGFUSE_BASE_URL=_get_env("LANGFUSE_BASE_URL"),
+        RAG_QDRANT_URL=_get_env("RAG_QDRANT_URL"),
+        RAG_QDRANT_API_KEY=_get_env("RAG_QDRANT_API_KEY"),
+        RAG_QDRANT_COLLECTION=_get_env("RAG_QDRANT_COLLECTION", "resume_guidance"),
+        RAG_EMBEDDING_MODEL=_get_env("RAG_EMBEDDING_MODEL", "models/gemini-embedding-001"),
+        RAG_TOP_K=int(_get_env("RAG_TOP_K", "5")),
     )
 
 

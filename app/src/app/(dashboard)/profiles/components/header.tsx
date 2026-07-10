@@ -1,14 +1,46 @@
 import { UseMutationResult } from "@tanstack/react-query";
-import { FileText, Upload, Pen, CheckCircle, XCircle } from "lucide-react"
-import { Dispatch, SetStateAction } from "react"
+import { FileText, Upload, Download, Pen, CheckCircle, XCircle, LogOut } from "lucide-react"
+import { Dispatch, SetStateAction, useState } from "react"
+import type { ResumeData } from "@/resume-engine/types/resume-data";
+import type { TemplateDocument } from "@/resume-engine/types/template";
+import type { ThemeDocument } from "@/resume-engine/types/theme";
+import { useAuth } from "@/hooks/use-auth";
+import { renderResumeHtmlApi, generateLexicalPdfApi } from "@/apis/resume-pdf";
 
 const Header = (props: {
     mode: "form" | "spec";
     setMode: Dispatch<SetStateAction<"form" | "spec">>;
     parseResume: UseMutationResult<any, Error, { file?: File | null; text?: string }, unknown>;
     importStatus?: { type: "success" | "error"; message: string } | null;
+    templateDoc: TemplateDocument;
+    themeDoc: ThemeDocument;
+    values: ResumeData;
 }) => {
-    const { mode, setMode, parseResume, importStatus } = props
+    const { mode, setMode, parseResume, importStatus, templateDoc, themeDoc, values } = props
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
+    const { signOut } = useAuth({ enabled: true });
+
+    const handleDownloadClick = async () => {
+        setIsDownloading(true);
+        setDownloadError(null);
+        try {
+            const html = await renderResumeHtmlApi({ templateDoc, themeDoc, data: values });
+            const url = await generateLexicalPdfApi(html);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "resume.pdf";
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch {
+            setDownloadError("Failed to generate PDF");
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     return (
         <div className="border-b px-5 py-3 flex items-center justify-between">
@@ -59,6 +91,28 @@ const Header = (props: {
                 >
                     <Upload size={16} />
                     {parseResume.isPending ? "Importing..." : "Import Resume"}
+                </button>
+                <div className="relative">
+                    <button
+                        onClick={handleDownloadClick}
+                        disabled={isDownloading}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <Download size={16} />
+                        {isDownloading ? "Downloading..." : "Download"}
+                    </button>
+                    {downloadError && (
+                        <div className="absolute right-0 top-full mt-1 w-48 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1 z-10">
+                            {downloadError}
+                        </div>
+                    )}
+                </div>
+                <button
+                    onClick={signOut}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-md hover:bg-muted transition-colors"
+                >
+                    <LogOut size={16} />
+                    Sign out
                 </button>
             </div>
         </div>

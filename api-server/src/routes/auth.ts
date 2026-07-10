@@ -122,14 +122,14 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
   // POST /api/auth/refresh - Exchange a refresh token for new tokens.
   // Tokens are returned in the body; the Next.js API route sets cookies.
-  fastify.post<{ Body: { refresh_token?: string } }>(
+  fastify.post(
     '/api/auth/refresh',
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         let refreshToken: string | null = null;
         let tokenSource = 'unknown';
 
-        // Authorization header (Bearer) - used by the Next.js proxy and mobile/CLI clients
+        // Authorization header (Bearer)
         if (request.headers.authorization) {
           try {
             refreshToken = extractBearerToken(request.headers.authorization);
@@ -137,19 +137,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           } catch {
             // Authorization header present but malformed; fall through to other sources
           }
-        }
-
-        // Request body
-        const body = request.body as { refresh_token?: string } | undefined;
-        if (!refreshToken && body?.refresh_token) {
-          refreshToken = body.refresh_token;
-          tokenSource = 'body';
-        }
-
-        // Cookie fallback (web browsers calling the backend directly)
-        if (!refreshToken && request.cookies?.refresh_token) {
-          refreshToken = request.cookies.refresh_token;
-          tokenSource = 'cookie';
         }
 
         if (!refreshToken) {
@@ -181,7 +168,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         }
 
         request.log.info({ event: 'token_refresh_success', duration }, 'Token refreshed successfully');
-
         reply.send({
           ok: true,
           access_token: data.session.access_token,

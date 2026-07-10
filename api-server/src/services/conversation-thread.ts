@@ -1,5 +1,6 @@
 import { ConversationThreadRepository } from '../repositories/conversation-thread';
 import { env } from '../config/env';
+import { issueAiServerToken } from './ai-server-token';
 import type {
   ConversationThread,
   CreateConversationThreadFromWebhookInput,
@@ -25,10 +26,10 @@ export class ConversationThreadService {
     userId: string,
     candidateProfileId: string,
     threadId: string,
-    accessToken: string,
   ): Promise<ThreadMessagesResponse | null> {
     const thread = await this.repository.findByThreadId(threadId, candidateProfileId, userId);
     if (!thread) return null;
+    const { access_token: accessToken } = await issueAiServerToken(userId);
     const response = await fetch(`${env.aiServerUrl}/api/agent/threads/${threadId}/messages`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });

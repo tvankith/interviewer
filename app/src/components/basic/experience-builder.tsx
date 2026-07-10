@@ -13,18 +13,20 @@ import {
     arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import RichTextEditor from "./rich-text-editor";
 import ChipInput from "./chip-input";
+import type { RichTextValue } from "@/resume-engine/types/lexical";
 
 export type Experience = {
     company?: string;
     role?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -38,7 +40,7 @@ type ItemProps = {
     exp: Experience;
     index: number;
     onRemove: (index: number) => void;
-    onChange: (index: number, key: keyof Omit<Experience, "tech_stack">, val: string) => void;
+    onChange: (index: number, key: keyof Omit<Experience, "tech_stack">, val: string | RichTextValue) => void;
     onTechStackChange: (index: number, val: string[]) => void;
 };
 
@@ -54,7 +56,17 @@ function SortableExperience({ id, exp, index, onRemove, onChange, onTechStackCha
 
     return (
         <div ref={setNodeRef} style={style}>
-            <Card className="mt-3">
+            <Card className="mt-3 relative">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-destructive"
+                    onClick={() => onRemove(index)}
+                >
+                    <X className="size-4" />
+                </Button>
+
                 <CardContent className="space-y-2 pt-4">
                     <div
                         className="flex justify-end cursor-grab active:cursor-grabbing text-muted-foreground select-none"
@@ -89,8 +101,9 @@ function SortableExperience({ id, exp, index, onRemove, onChange, onTechStackCha
                     />
 
                     <RichTextEditor
-                        value={exp.description || ""}
-                        onChange={(html) => onChange(index, "description", html)}
+                        format="lexical"
+                        value={exp.description}
+                        onChange={(state) => onChange(index, "description", state)}
                         placeholder={["Tell me about your experience", exp.company && ` in ${exp.company}`].join(" ")}
                     />
 
@@ -99,14 +112,6 @@ function SortableExperience({ id, exp, index, onRemove, onChange, onTechStackCha
                         onChange={(val) => onTechStackChange(index, val)}
                         placeholder="Add technology..."
                     />
-
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => onRemove(index)}
-                    >
-                        Remove
-                    </Button>
                 </CardContent>
             </Card>
         </div>
@@ -128,7 +133,7 @@ export default function ExperienceBuilder({ value = [], onChange }: Props) {
         onChange(updated);
     };
 
-    const handleChange = (index: number, key: keyof Omit<Experience, "tech_stack">, val: string) => {
+    const handleChange = (index: number, key: keyof Omit<Experience, "tech_stack">, val: string | RichTextValue) => {
         const updated = [...value];
         updated[index] = { ...updated[index], [key]: val };
         onChange(updated);

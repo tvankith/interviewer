@@ -3,12 +3,13 @@ import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import RichTextEditor from "./rich-text-editor";
 import ChipInput from "./chip-input";
+import type { RichTextValue } from "@/resume-engine/types/lexical";
 
 /* ================= TYPES ================= */
 
 export type Project = {
     name?: string;
-    description?: string;
+    description?: RichTextValue;
     tech_stack: string[];
 };
 
@@ -33,7 +34,7 @@ export default function ProjectBuilder({ value = [], onChange }: Props) {
     const handleChange = (
         index: number,
         key: keyof Omit<Project, "tech_stack">,
-        val: string
+        val: string | RichTextValue
     ) => {
         const updated = [...value];
         updated[index] = {
@@ -69,9 +70,10 @@ export default function ProjectBuilder({ value = [], onChange }: Props) {
                         />
 
                         <RichTextEditor
-                            value={project.description || ""}
-                            onChange={(val) =>
-                                handleChange(index, "description", val)
+                            format="lexical"
+                            value={project.description}
+                            onChange={(state) =>
+                                handleChange(index, "description", state)
                             }
                             placeholder="Description"
                         />

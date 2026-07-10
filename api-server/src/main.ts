@@ -11,8 +11,11 @@ import { authRoutes } from './routes/auth';
 import { profileRoutes } from './routes/profile';
 import { profileSpecRoutes } from './routes/profile-spec';
 import { resumeTemplateRoutes } from './routes/resume-template';
+import { resumeThemeRoutes } from './routes/resume-theme';
 import { sseRoutes } from './routes/sse';
 import { conversationThreadRoutes } from './routes/conversation-thread';
+import { aiServerTokenRoutes } from './routes/ai-server-token';
+import { lexicalRoutes } from './routes/lexical';
 import { createMcpHandler } from './mcp/server';
 import { sseManager } from './utils/sse-manager';
 import { swaggerConfig, swaggerUiConfig } from './config/swagger';
@@ -63,8 +66,11 @@ async function start(): Promise<void> {
     await fastify.register(profileRoutes);
     await fastify.register(profileSpecRoutes);
     await fastify.register(resumeTemplateRoutes);
+    await fastify.register(resumeThemeRoutes);
     await fastify.register(sseRoutes);
     await fastify.register(conversationThreadRoutes);
+    await fastify.register(aiServerTokenRoutes);
+    await fastify.register(lexicalRoutes);
 
     // MCP endpoint — resume editor tools
     const mcpHandler = createMcpHandler(getDatabase(), sseManager);

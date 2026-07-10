@@ -1,15 +1,13 @@
 import logging
 from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, field
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Literal
 
 import httpx
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.tools import BaseTool, StructuredTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langfuse import Langfuse, propagate_attributes
-from langfuse.langchain import CallbackHandler
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
@@ -19,6 +17,7 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 from core.config import CONFIG
+from rag.retrieval.tool import RETRIEVE_RESUME_GUIDANCE_TOOL, RETRIEVE_RESUME_GUIDANCE_TOOL_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -92,21 +91,48 @@ SYSTEM_PROMPT = (
     "You can read the candidate's profile with the available read-only tools. "
     "You have no ability to save, update, or persist any change to the "
     "candidate's profile — never claim to have done so.\n\n"
+    "At the start of the conversation, before asking any interview question, "
+    "call get_profile_specs and read the spec named 'resume.md' from the "
+    "returned list — use its content to ground your interview questions and "
+    "any resume suggestions in what the candidate has actually written. If "
+    "no spec named 'resume.md' is present, continue without it.\n\n"
+    "Before drafting or rewriting any resume content (a summary, an "
+    f"experience bullet, etc.), call {RETRIEVE_RESUME_GUIDANCE_TOOL_NAME} "
+    "with a query describing the writing guidance you need, and ground your "
+    "suggestion in the guidance it returns.\n\n"
     "When you want to suggest an edit to the candidate's resume, call "
     f"{PROPOSE_PROFILE_UPDATE_TOOL_NAME} with only the fields you are "
     "changing. This shows the candidate a diff to approve or reject "
     "themselves; it never saves anything by itself. For list fields "
     "(skills, projects, experiences, educations, links), first read the "
     "candidate's current profile, then return the COMPLETE array including "
-    "every unchanged entry — these fields are replaced wholesale when "
-    "saved, not merged item by item."
+    "every unchanged entry, IN THE SAME ORDER as the current profile — only "
+    "append new entries at the end or drop removed ones in place, never "
+    "reorder or insert an entry in the middle of the array. The candidate's "
+    "review UI matches your proposed array to their current one position by "
+    "position, so reordering makes it misattribute which entry changed.\n\n"
+    "The candidate reviews a proposal per field and per list entry, not "
+    "all-or-nothing — you may see some fields/entries reported back as "
+    "accepted and others as rejected from the same proposal. Rejected "
+    "fields/entries were left at their previous value; only accepted ones "
+    "were actually saved."
 )
+
+
+@dataclass
+class ProposalUnitDecision:
+    """One field's or list entry's independent accept/reject decision — see
+    app/src/resume-engine/diff/review-unit.ts for the matching `unit` id
+    scheme (a field name, or `field.index` for a list entry)."""
+
+    unit: str
+    status: Literal["accepted", "rejected"]
 
 
 @dataclass
 class ProposalOutcome:
     proposal_id: str
-    approved: bool
+    decisions: list[ProposalUnitDecision]
 
 
 @dataclass
@@ -155,10 +181,15 @@ _checkpointer: AsyncPostgresSaver | None = None
 
 # Opt-in and fail-open: without both keys configured, no Langfuse client is
 # created and the agent runs exactly as it did before this integration.
-_langfuse_client: Langfuse | None = None
-_langfuse_handler: CallbackHandler | None = None
+# Imported lazily below so the (fairly heavy) langfuse package is never
+# loaded at all on the common path where tracing is disabled.
+_langfuse_client: Any | None = None
+_langfuse_handler: Any | None = None
 
 if CONFIG.LANGFUSE_ENABLED:
+    from langfuse import Langfuse
+    from langfuse.langchain import CallbackHandler
+
     _langfuse_client = Langfuse(
         public_key=CONFIG.LANGFUSE_PUBLIC_KEY,
         secret_key=CONFIG.LANGFUSE_SECRET_KEY,
@@ -208,12 +239,13 @@ def _build_graph(checkpointer: AsyncPostgresSaver, tools: list[BaseTool]):
         model="gemini-2.5-flash",
         google_api_key=CONFIG.GOOGLE_API_KEY,
     )
-    # propose_profile_update is always bound, regardless of candidate_id/MCP
-    # tool availability — it's local and side-effect-free, so the agent can
-    # always at least propose an edit even if MCP tools fail to load. This
-    # also guarantees the tools node is always present: no separate
-    # tools/no-tools branch is needed.
-    all_tools = [*tools, PROPOSE_PROFILE_UPDATE_TOOL]
+    # propose_profile_update and retrieve_resume_guidance are always bound,
+    # regardless of candidate_id/MCP tool availability — both are local and
+    # have no candidate-scoping dependency, so the agent can always at least
+    # propose an edit or pull writing guidance even if MCP tools fail to
+    # load. This also guarantees the tools node is always present: no
+    # separate tools/no-tools branch is needed.
+    all_tools = [*tools, PROPOSE_PROFILE_UPDATE_TOOL, RETRIEVE_RESUME_GUIDANCE_TOOL]
     logger.debug("Building graph with tools: %s", [tool.name for tool in all_tools])
     llm_with_tools = llm.bind_tools(all_tools)
 
@@ -282,6 +314,8 @@ async def invoke_agent(
     config: dict = {"configurable": {"thread_id": thread_id}}
     trace_attributes = nullcontext()
     if _langfuse_handler is not None:
+        from langfuse import propagate_attributes
+
         config["callbacks"] = [_langfuse_handler]
         attrs: dict = {"session_id": thread_id, "tags": ["ai-server"]}
         if candidate_id:
@@ -291,14 +325,20 @@ async def invoke_agent(
     # proposal_outcome is reported as a synthetic, clearly-bracketed fact
     # rather than freeform text — it's a deterministic status update, not
     # something the model should interpret as the candidate's own words.
+    # Review is per-unit (see design.md), so a single proposal can come back
+    # with a mix of accepted and rejected fields/entries rather than one
+    # whole-proposal verdict.
     if proposal_outcome is not None:
-        status = (
-            "approved — the change has already been saved to the candidate's profile"
-            if proposal_outcome.approved
-            else "rejected — no change was made"
-        )
+        accepted = [d.unit for d in proposal_outcome.decisions if d.status == "accepted"]
+        rejected = [d.unit for d in proposal_outcome.decisions if d.status == "rejected"]
+        parts = []
+        if accepted:
+            parts.append(f"accepted (saved): {', '.join(accepted)}")
+        if rejected:
+            parts.append(f"rejected (left unchanged): {', '.join(rejected)}")
+        summary = "; ".join(parts) if parts else "nothing accepted, no changes were made"
         input_message = HumanMessage(
-            content=f"[proposal {proposal_outcome.proposal_id} {status}]"
+            content=f"[proposal {proposal_outcome.proposal_id} reviewed — {summary}]"
         )
     else:
         input_message = HumanMessage(content=user_message)

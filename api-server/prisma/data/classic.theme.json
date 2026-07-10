@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-theme-v1",
+  "name": "Classic",
+  "fonts": {
+    "base": "'Gelasio', Georgia, 'Times New Roman', serif",
+    "heading": "'Gelasio', Georgia, 'Times New Roman', serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+  },
+  "colors": {
+    "text": "#1a1a1a",
+    "muted": "#555555",
+    "light": "#999999",
+    "line": "#1a1a1a",
+    "pillBg": "#f5f5f5",
+    "pillBorder": "#e0e0e0"
+  },
+  "sizes": {
+    "h1": "22px",
+    "h2": "13px",
+    "body": "11px",
+    "small": "10px",
+    "label": "11px"
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "14px",
+    "lg": "20px",
+    "xl": "32px"
+  },
+  "borders": {
+    "radius": "3px",
+    "width": "1px"
+  },
+  "page": {
+    "background": "#ffffff",
+    "maxWidth": "800px",
+    "width": "794px",
+    "height": "1123px",
+    "padding": "36px 48px"
+  }
+}

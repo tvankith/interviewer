@@ -2,13 +2,14 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import RichTextEditor from "./rich-text-editor";
+import type { RichTextValue } from "@/resume-engine/types/lexical";
 
 export type Education = {
     institute?: string;
     course?: string;
     start_date?: string;
     end_date?: string;
-    description?: string;
+    description?: RichTextValue;
 };
 
 type Props = {
@@ -27,7 +28,7 @@ export default function EducationBuilder({ value = [], onChange }: Props) {
         onChange(updated);
     };
 
-    const handleChange = (index: number, key: keyof Education, val: string) => {
+    const handleChange = (index: number, key: keyof Education, val: string | RichTextValue) => {
         const updated = [...value];
         updated[index] = { ...updated[index], [key]: val };
         onChange(updated);
@@ -67,8 +68,9 @@ export default function EducationBuilder({ value = [], onChange }: Props) {
                         />
 
                         <RichTextEditor
-                            value={edu.description || ""}
-                            onChange={(html) => handleChange(index, "description", html)}
+                            format="lexical"
+                            value={edu.description}
+                            onChange={(state) => handleChange(index, "description", state)}
                             placeholder="Description"
                         />
 

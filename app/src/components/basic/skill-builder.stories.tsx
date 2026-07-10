@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { useState } from 'react'
-import SkillsBuilder, { type SkillCategory } from './skill-builder'
+import SkillsBuilder, { type SkillGroup } from './skill-builder'
 
 const meta: Meta<typeof SkillsBuilder> = {
   title: 'Basic/SkillsBuilder',
@@ -11,8 +11,8 @@ const meta: Meta<typeof SkillsBuilder> = {
 export default meta
 type Story = StoryObj<typeof SkillsBuilder>
 
-function Controlled(props: { initial?: SkillCategory[] }) {
-  const [value, setValue] = useState<SkillCategory[]>(props.initial ?? [])
+function Controlled(props: { initial?: SkillGroup[] }) {
+  const [value, setValue] = useState<SkillGroup[]>(props.initial ?? [])
   return (
     <div className="w-96">
       <SkillsBuilder value={value} onChange={setValue} />

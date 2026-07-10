@@ -17,11 +17,12 @@ export const mapFormToProfilePayload = (data: CandidateFormValues) => ({
     })),
     educations: data?.educations || [],
     links: data?.links || [],
+    title: data?.title || "",
     name: data?.name || "",
     email: data?.email || "",
     phone: data?.phone,
     location: data?.location || "",
-    summary: data?.summary || "",
+    summary: data?.summary,
     website: data?.website || "",
     skills: data?.skills || [],
 });

@@ -5,11 +5,23 @@ import { authGuard } from '../middleware/auth';
 
 const resumeTemplateService = new ResumeTemplateService();
 
+// Structured template JSON (pages/rows/columns/sections/bindings) — see
+// app/src/resume-engine/types/template.ts for the full TemplateDocument
+// shape. Only the document envelope is validated here; the recursive node
+// tree (`root`) isn't worth fully mirroring in Zod for the MVP template
+// authoring surface (there is no in-app template designer yet).
+const templateDocumentSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string(),
+  name: z.string(),
+  root: z.record(z.any()),
+});
+
 const createResumeTemplateSchema = z.object({
   name: z.string().min(1),
   version: z.string().default('1.0.0'),
   is_public: z.boolean().default(false),
-  content: z.object({ html: z.string() }),
+  content: templateDocumentSchema,
   thumbnail_url: z.string().optional().nullable(),
 });
 
@@ -17,7 +29,7 @@ const updateResumeTemplateSchema = z.object({
   name: z.string().optional(),
   version: z.string().optional(),
   is_public: z.boolean().optional(),
-  content: z.object({ html: z.string() }).optional(),
+  content: templateDocumentSchema.optional(),
   thumbnail_url: z.string().optional().nullable(),
 });
 

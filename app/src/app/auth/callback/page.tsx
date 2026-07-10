@@ -9,9 +9,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
  * OAuth return page (frontend-initiated flow).
  *
  * Supabase redirects here with a PKCE `code`. We exchange it for a session
- * client-side, hand the tokens to our Next.js API route (which validates them
- * against the backend and sets httpOnly cookies), then clear the local Supabase
- * session so the backend cookies are the single source of truth.
+ * client-side and hand the tokens to our Next.js API route, which validates
+ * them against the backend and sets httpOnly cookies — those cookies become
+ * the single source of truth from here on. We deliberately never call
+ * `supabase.auth.signOut()` on this client: signOut() always revokes the
+ * current session's refresh token server-side (scope only controls whether
+ * *other* sessions are also revoked), which would kill the very token we just
+ * handed to the backend before it's ever used.
  */
 function AuthCallback() {
   const router = useRouter();
@@ -27,7 +31,7 @@ function AuthCallback() {
       const supabase = createSupabaseBrowserClient();
 
       try {
-        const code = params.get("code");
+        const code = params?.get("code");
         if (!code) {
           throw new Error("Missing authorization code");
         }
@@ -51,11 +55,7 @@ function AuthCallback() {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || "Authentication failed");
         }
-
-        // httpOnly cookies set by the API route are now the source of truth.
-        await supabase.auth.signOut();
-
-        const dest = params.get("redirect_url") || "/";
+        const dest = params?.get("redirect_url") || "/";
         router.replace(dest);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Authentication failed");

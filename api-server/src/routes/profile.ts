@@ -9,19 +9,22 @@ import { authGuard } from '../middleware/auth';
 const profileService = new ProfileService();
 const resumeParserService = new ResumeParserService();
 
+// summary is a Lexical SerializedEditorState (rich text), not a plain string.
 const createProfileSchema = z.object({
   title: z.string().optional().nullable(),
   name: z.string().optional().nullable(),
   email: z.string().email().optional().nullable(),
   phone: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-  summary: z.string().optional().nullable(),
+  summary: z.record(z.any()).optional().nullable(),
   website: z.string().optional().nullable(),
   skills: z.any().optional(),
   projects: z.any().optional(),
   experiences: z.any().optional(),
   educations: z.any().optional(),
   links: z.any().optional(),
+  template_id: z.string().optional().nullable(),
+  theme_id: z.string().optional().nullable(),
 });
 
 const updateProfileSchema = z.object({
@@ -30,13 +33,15 @@ const updateProfileSchema = z.object({
   email: z.string().email().optional().nullable(),
   phone: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-  summary: z.string().optional().nullable(),
+  summary: z.record(z.any()).optional().nullable(),
   website: z.string().optional().nullable(),
   skills: z.any().optional(),
   projects: z.any().optional(),
   experiences: z.any().optional(),
   educations: z.any().optional(),
   links: z.any().optional(),
+  template_id: z.string().optional().nullable(),
+  theme_id: z.string().optional().nullable(),
 });
 
 const listParamsSchema = z.object({
@@ -52,13 +57,20 @@ const stringArray = { type: 'array', items: { type: 'string' } };
 const parsedResumeResponseSchema = {
   type: 'object',
   properties: {
+    title: nullableString,
     name: nullableString,
     email: nullableString,
     phone: nullableString,
     location: nullableString,
     summary: nullableString,
     website: nullableString,
-    skills: stringArray,
+    skills: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { category: nullableString, skills: stringArray },
+      },
+    },
     links: {
       type: 'array',
       items: {
@@ -72,7 +84,7 @@ const parsedResumeResponseSchema = {
         type: 'object',
         properties: {
           name: nullableString,
-          description: nullableString,
+          description: stringArray,
           tech_stack: stringArray,
         },
       },
@@ -84,9 +96,10 @@ const parsedResumeResponseSchema = {
         properties: {
           company: nullableString,
           role: nullableString,
+          location: nullableString,
           start_date: nullableString,
           end_date: nullableString,
-          description: nullableString,
+          description: stringArray,
           tech_stack: stringArray,
         },
       },
@@ -100,7 +113,7 @@ const parsedResumeResponseSchema = {
           course: nullableString,
           start_date: nullableString,
           end_date: nullableString,
-          description: nullableString,
+          description: stringArray,
         },
       },
     },

@@ -10,28 +10,33 @@ function normaliseLlmResult(
   raw: ReturnType<typeof llmParsedResumeSchema.parse>,
 ): ParsedResume {
   return {
+    title: raw.title ?? null,
     name: raw.name ?? null,
     email: raw.email ?? null,
     phone: raw.phone ?? null,
     location: raw.location ?? null,
     summary: raw.summary ?? null,
     website: raw.website ?? null,
-    skills: raw.skills ?? [],
+    skills: (raw.skills ?? []).map((g) => ({
+      category: g.category ?? null,
+      skills: g.skills ?? [],
+    })),
     links: (raw.links ?? []).map((l) => ({
       url: l.url ?? "",
       social_media: l.social_media ?? "",
     })),
     projects: (raw.projects ?? []).map((p) => ({
       name: p.name ?? null,
-      description: p.description ?? null,
+      description: p.description ?? [],
       tech_stack: p.tech_stack ?? [],
     })),
     experiences: (raw.experiences ?? []).map((e) => ({
       company: e.company ?? null,
       role: e.role ?? null,
+      location: e.location ?? null,
       start_date: e.start_date ?? null,
       end_date: e.end_date ?? null,
-      description: e.description ?? null,
+      description: e.description ?? [],
       tech_stack: e.tech_stack ?? [],
     })),
     educations: (raw.educations ?? []).map((ed) => ({
@@ -39,7 +44,7 @@ function normaliseLlmResult(
       course: ed.course ?? null,
       start_date: ed.start_date ?? null,
       end_date: ed.end_date ?? null,
-      description: ed.description ?? null,
+      description: ed.description ?? [],
     })),
   };
 }
@@ -58,6 +63,7 @@ const PARSER_PROMPT = (
 FIELDS TO EXTRACT:
 
 Contact info (scan the full header and footer):
+- title: professional headline/title as stated near the name (e.g. "Senior Software Engineer") — not a job history entry, just the candidate's current or target role label
 - name: full name
 - email: email address
 - phone: phone number (digits only, no formatting required)
@@ -66,7 +72,10 @@ Contact info (scan the full header and footer):
 - website: personal site URL (not LinkedIn/GitHub — those go in links)
 
 Skills (scan Skills, Technical Skills, Technologies, Tools, Competencies sections AND infer from job descriptions):
-- skills: every distinct technology, language, framework, tool, or skill — normalized (e.g. "React.js" → "React", "node" → "Node.js", "Postgres" → "PostgreSQL")
+- skills: a list of skill groups, each with:
+  - category: the sub-label the resume uses to group these skills under (e.g. "Languages", "Cloud", "Frameworks") — omit this field entirely for a group of skills that aren't sub-categorized in the resume
+  - skills: the distinct technologies, languages, frameworks, tools, or skills in that group — normalized (e.g. "React.js" → "React", "node" → "Node.js", "Postgres" → "PostgreSQL")
+  If the resume lists skills under sub-headers (e.g. "Languages: Python, Go" and "Cloud: AWS, GCP"), produce one group per sub-header. If the resume just lists skills flatly with no sub-categorization, produce a single group with no category.
 
 Links (scan header, footer, contact section):
 - links: social profiles with:
@@ -76,16 +85,17 @@ Links (scan header, footer, contact section):
 Projects (scan Projects, Personal Projects, Side Projects sections):
 - projects: each project with:
   - name
-  - description
+  - description: list of bullet points describing the project
   - tech_stack: list of technologies mentioned in or for this project
 
 Experiences (scan Experience, Work Experience, Employment, Career sections):
 - experiences: each role with:
   - company
   - role: job title
+  - location: city, state, country for this role (if stated)
   - start_date: as written (e.g. "Jan 2022", "2022")
   - end_date: as written, or "Present" if current
-  - description: responsibilities and achievements
+  - description: list of bullet points covering responsibilities and achievements
   - tech_stack: technologies mentioned in this role's description
 
 Education (scan Education, Academic Background sections):
@@ -94,7 +104,7 @@ Education (scan Education, Academic Background sections):
   - course: degree or program name
   - start_date: as written
   - end_date: as written or "Present"
-  - description: any additional info (GPA, honors, coursework)
+  - description: list of bullet points with additional info (GPA, honors, coursework)
 
 RULES:
 - Extract tech_stack from BOTH project descriptions AND experience bullet points

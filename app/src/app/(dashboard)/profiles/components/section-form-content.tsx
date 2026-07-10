@@ -1,6 +1,7 @@
-import { ChipInput, EducationBuilder, ExperienceBuilder, Field, FieldContent, FieldLabel, Input, ProjectBuilder, ResumeDropzone, RichTextEditor, SocialLinksBuilder } from "@/design-system";
+import { EducationBuilder, ExperienceBuilder, Field, FieldContent, FieldLabel, Input, ProjectBuilder, ResumeDropzone, RichTextEditor, SkillsBuilder, SocialLinksBuilder } from "@/design-system";
 import { useProfileEditor } from "./profile-editor-context";
 import TemplateSelector from "./template-selector";
+import ThemeSelector from "./theme-selector";
 import type { SectionId } from "./profile-sections";
 
 export default function SectionFormContent({ sectionId }: { sectionId: SectionId }) {
@@ -13,6 +14,8 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
         links,
         summary,
         skills,
+        templateId,
+        themeId,
     } = useProfileEditor();
 
     switch (sectionId) {
@@ -23,6 +26,12 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
                         <FieldLabel>Full Name</FieldLabel>
                         <FieldContent>
                             <Input {...register("name")} placeholder="Your full name" />
+                        </FieldContent>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Title</FieldLabel>
+                        <FieldContent>
+                            <Input {...register("title")} placeholder="e.g. Senior Software Engineer" />
                         </FieldContent>
                     </Field>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-4">
@@ -60,8 +69,9 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
                     <FieldLabel>Professional Summary</FieldLabel>
                     <FieldContent>
                         <RichTextEditor
+                            format="lexical"
                             value={summary}
-                            onChange={(html) => setValue("summary", html)}
+                            onChange={(state) => setValue("summary", state)}
                         />
                     </FieldContent>
                 </Field>
@@ -72,10 +82,9 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
                 <Field>
                     <FieldLabel>Skills</FieldLabel>
                     <FieldContent>
-                        <ChipInput
+                        <SkillsBuilder
                             value={skills ?? []}
                             onChange={(val) => setValue("skills", val)}
-                            placeholder="Add a skill..."
                         />
                     </FieldContent>
                 </Field>
@@ -131,6 +140,30 @@ export default function SectionFormContent({ sectionId }: { sectionId: SectionId
                         />
                     </FieldContent>
                 </Field>
+            );
+
+        case "template":
+            return (
+                <div className="space-y-8">
+                    <Field>
+                        <FieldLabel>Template</FieldLabel>
+                        <FieldContent>
+                            <TemplateSelector
+                                selectedId={templateId}
+                                onSelect={(template) => setValue("template_id", template.id, { shouldDirty: true })}
+                            />
+                        </FieldContent>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Theme</FieldLabel>
+                        <FieldContent>
+                            <ThemeSelector
+                                selectedId={themeId}
+                                onSelect={(theme) => setValue("theme_id", theme.id, { shouldDirty: true })}
+                            />
+                        </FieldContent>
+                    </Field>
+                </div>
             );
     }
 }
