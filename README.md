@@ -1,5 +1,7 @@
 # interviewer
 
+<img width="1512" height="732" alt="image" src="https://github.com/user-attachments/assets/4599b9d9-f87a-4f6e-b07a-65e1373cf3d0" />
+
 ## Quick Start (Docker)
 
 Run the full stack — `app`, `api-server`, `agent-server`, and PostgreSQL — with a single command.
