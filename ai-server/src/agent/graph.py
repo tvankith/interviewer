@@ -19,6 +19,9 @@ from typing_extensions import TypedDict
 from core.config import CONFIG
 from rag.retrieval.tool import RETRIEVE_RESUME_GUIDANCE_TOOL, RETRIEVE_RESUME_GUIDANCE_TOOL_NAME
 
+from psycopg_pool import AsyncConnectionPool
+from langgraph.checkpoint.postgres.aio import AsyncShallowPostgresSaver 
+
 logger = logging.getLogger(__name__)
 
 
@@ -274,10 +277,20 @@ async def lifespan_checkpointer() -> AsyncIterator[None]:
     fails the server rather than starting in a degraded state."""
     global _checkpointer
     try:
-        async with AsyncPostgresSaver.from_conn_string(CONFIG.DATABASE_URL) as saver:
-            await saver.setup()
-            _checkpointer = saver
-            yield
+        pool = AsyncConnectionPool(
+            conninfo=CONFIG.DATABASE_URL,
+            min_size=1,
+            max_size=5,
+            kwargs={
+                "autocommit": True, 
+                "prepare_threshold": 0,
+            },
+            open=False
+        )
+        await pool.open()
+        _checkpointer = AsyncShallowPostgresSaver(pool)
+        await _checkpointer.setup()
+        yield
     except OperationalError as exc:
         raise RuntimeError(
             "Could not connect to the checkpointer database — refusing to start"
