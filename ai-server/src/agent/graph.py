@@ -20,7 +20,6 @@ from core.config import CONFIG
 from rag.retrieval.tool import RETRIEVE_RESUME_GUIDANCE_TOOL, RETRIEVE_RESUME_GUIDANCE_TOOL_NAME
 
 from psycopg_pool import AsyncConnectionPool
-from langgraph.checkpoint.postgres.aio import AsyncShallowPostgresSaver 
 
 logger = logging.getLogger(__name__)
 
@@ -278,19 +277,17 @@ async def lifespan_checkpointer() -> AsyncIterator[None]:
     global _checkpointer
     try:
         pool = AsyncConnectionPool(
-            conninfo=CONFIG.DATABASE_URL,
-            min_size=1,
+            CONFIG.DATABASE_URL,
+            min_size=1, 
             max_size=5,
-            kwargs={
-                "autocommit": True, 
-                "prepare_threshold": 0,
-            },
-            open=False
+            max_idle=30,
+            num_workers=1
         )
-        await pool.open()
-        _checkpointer = AsyncShallowPostgresSaver(pool)
+        _checkpointer = AsyncPostgresSaver(pool)
         await _checkpointer.setup()
         yield
+        if pool:
+            await pool.close()
     except OperationalError as exc:
         raise RuntimeError(
             "Could not connect to the checkpointer database — refusing to start"
