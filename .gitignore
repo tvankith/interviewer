@@ -54,3 +54,5 @@ repo.code-workspace
 
 # Knowledge source
 corpus
+.vercel
+.env*
