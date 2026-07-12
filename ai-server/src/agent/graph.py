@@ -278,10 +278,11 @@ async def lifespan_checkpointer() -> AsyncIterator[None]:
     try:
         pool = AsyncConnectionPool(
             CONFIG.DATABASE_URL,
-            min_size=1, 
+            min_size=1,
             max_size=5,
             max_idle=30,
-            num_workers=1
+            num_workers=1,
+            kwargs={"autocommit": True, "prepare_threshold": None}
         )
         _checkpointer = AsyncPostgresSaver(pool)
         await _checkpointer.setup()
